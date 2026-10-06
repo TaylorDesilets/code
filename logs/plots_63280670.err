@@ -1,8 +1,0 @@
-Traceback (most recent call last):
-  File "/home/taylor33/code/Correction_applied_plots.py", line 205, in <module>
-    dist_ftfp, w_dist_ftfp = extract_distance_and_weights(df_ftfp, N_PRIMARIES_FTFP)
-                             ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
-  File "/home/taylor33/code/Correction_applied_plots.py", line 202, in extract_distance_and_weights
-    valid_mask = dist.notna()
-                 ^^^^^^^^^^
-AttributeError: 'numpy.float64' object has no attribute 'notna'

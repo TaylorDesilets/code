@@ -22,6 +22,31 @@ for df in [df_ftfp, df_shielding]:
     df['secondaryName'] = df['secondaryName'].astype(str).str.strip()
     df['creationProcess'] = df['creationProcess'].astype(str).str.strip()
 
+# CORRECTION TO ACCOUNT FOR GEANT4 vs PROPOSAL 
+def mei_hime_correction_factor(E_mu_GeV):
+    denominator = 1.0 - 0.314 * (E_mu_GeV ** 0.128) + 1.68e6 * (E_mu_GeV ** -5.793)
+    return 1.0 / denominator
+
+def get_weights(df_neutrons, n_primaries_simulated=400e6):
+    """Computes event weights combining Mei & Hime correction and primary normalization."""
+    mu_cols = ['PrimaryEnergy (GeV)', 'PrimaryEnergy', 'E_mu', 'E_primary', 'muon_energy']
+    e_mu = None
+    
+    for col in mu_cols:
+        if col in df_neutrons.columns:
+            e_mu = df_neutrons[col]
+            if e_mu.mean() > 1000:  # Convert MeV to GeV if needed
+                e_mu = e_mu / 1000.0
+            break
+            
+    # Always ensure e_mu is a pandas Series so weights support index operations
+    if e_mu is None:
+        e_mu = pd.Series(DEFAULT_E_MU_GEV, index=df_neutrons.index)
+
+    mh_weights = mei_hime_correction_factor(e_mu)
+    norm_scale = 400e6 / n_primaries_simulated
+    return mh_weights * norm_scale
+
 # Target process categories for Plot 1
 process_categories = [
     'hadronCapture',
