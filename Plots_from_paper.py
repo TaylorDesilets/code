@@ -4,8 +4,8 @@ import pandas as pd
 import matplotlib.pyplot as plt
 
 
-FTFP_PATH = "home/taylor33/scratch/FTFP_1M.csv"
-SHIELDING_PATH = "home/taylor33/scratch/Shielding_secondary.csv"
+FTFP_PATH = "/home/taylor33/scratch/FTFP_1M.csv"
+SHIELDING_PATH = "/home/taylor33/scratch/Shielding_secondary.csv"
 
 # Check if files exist, fallback to .csv.gz if uncompressed doesn't exist
 if not os.path.exists(SHIELDING_PATH) and os.path.exists(SHIELDING_PATH + ".gz"):
