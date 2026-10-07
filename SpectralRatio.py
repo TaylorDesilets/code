@@ -3,17 +3,14 @@ import numpy as np
 import pandas as pd
 import matplotlib.pyplot as plt
 
-# File paths
-PATH_FULL = "/scratch/taylor33/Shielding_sim_FULL.csv"
-PATH_MEAN = "/scratch/taylor33/Shielding_sim_MEAN.csv"
+PATH_FULL = os.path.expanduser("~/scratch/Shielding_secondary.csv.gz")
+PATH_MEAN = os.path.expanduser("~/scratch/Shielding_sim_MEAN.csv")
 
-# Fallback for gzipped files if uncompressed ones aren't found
 if not os.path.exists(PATH_FULL) and os.path.exists(PATH_FULL + ".gz"):
     PATH_FULL += ".gz"
 if not os.path.exists(PATH_MEAN) and os.path.exists(PATH_MEAN + ".gz"):
     PATH_MEAN += ".gz"
 
-# Primary muon counts simulated in each run (Update to match your GEANT4 macros)
 N_MU_FULL = 1e6  
 N_MU_MEAN = 1e6  
 
@@ -22,7 +19,6 @@ def extract_exit_energy(path):
     # Clean particle name string
     df['secondaryName'] = df['secondaryName'].astype(str).str.strip()
     
-    # Filter for neutrons
     neutrons = df[df['secondaryName'] == 'neutron'].copy()
     
     energy_cols = [
@@ -45,24 +41,20 @@ bins = np.logspace(-10, 5, 100)
 bin_widths = np.diff(bins)
 bin_centers = np.sqrt(bins[:-1] * bins[1:])
 
-# Compute raw counts
 counts_full, _ = np.histogram(E_kin_full, bins=bins)
 counts_mean, _ = np.histogram(E_kin_mean, bins=bins)
 
-# Calculate normalized spectral density dN/dE per primary muon
 dN_dE_full = counts_full / (bin_widths * N_MU_FULL)
 dN_dE_mean = counts_mean / (bin_widths * N_MU_MEAN)
 
-# Compute Spectral Ratio: <E_mu> / E_FULL
+#Spectral Ratio: <E_mu> / E_FULL
 with np.errstate(divide='ignore', invalid='ignore'):
     ratio = np.where(dN_dE_full > 0, dN_dE_mean / dN_dE_full, np.nan)
 
-# Verification check
 print(f"Neutrons in FULL dataset: {len(E_kin_full)}")
 print(f"Neutrons in MEAN dataset: {len(E_kin_mean)}")
 print(f"Non-NaN ratio points: {np.count_nonzero(~np.isnan(ratio))}")
 
-# Plotting
 os.makedirs("plots", exist_ok=True)
 plt.figure(figsize=(8, 5.5), dpi=150)
 
