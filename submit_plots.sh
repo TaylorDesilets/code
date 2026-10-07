@@ -1,6 +1,6 @@
 #!/bin/bash
 #SBATCH --account=def-mariecci
-#SBATCH --job-name=correctionPlot
+#SBATCH --job-name=plotsfrompaper
 #SBATCH --output=logs/plots_%j.out
 #SBATCH --error=logs/plots_%j.err
 #SBATCH --cpus-per-task=2
@@ -14,4 +14,4 @@ module load StdEnv/2023 python/3.11.5 scipy-stack
 mkdir -p logs
 
 # Run Python plotting script
-python /home/taylor33/code/CorrectionPlot.py.py
+python /home/taylor33/code/Plots_from_paper.py

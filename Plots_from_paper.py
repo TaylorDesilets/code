@@ -3,9 +3,9 @@ import numpy as np
 import pandas as pd
 import matplotlib.pyplot as plt
 
-# File paths in /scratch/taylor33/
-FTFP_PATH = "/scratch/taylor33/ftfp_secondary.csv"
-SHIELDING_PATH = "/scratch/taylor33/Shielding_secondary.csv"
+
+FTFP_PATH = "home/taylor33/scratch/FTFP_1M.csv"
+SHIELDING_PATH = "home/taylor33/scratch/Shielding_secondary.csv"
 
 # Check if files exist, fallback to .csv.gz if uncompressed doesn't exist
 if not os.path.exists(SHIELDING_PATH) and os.path.exists(SHIELDING_PATH + ".gz"):
@@ -181,24 +181,42 @@ plt.savefig("plots/neutron_exit_energy_comparison.png", dpi=300)
 plt.close()
 
 
-# -------------------------------------------------------------------
 # PLOT 3: Neutron Production Distance From Lab (m)
-# -------------------------------------------------------------------
 def extract_distance(df):
     neutrons_df = df[df['secondaryName'] == 'neutron']
-    if {'CreationX (m)', 'CreationY (m)', 'CreationZ (m)'}.issubset(neutrons_df.columns):
-        return np.sqrt(neutrons_df['CreationX (m)']**2 + neutrons_df['CreationY (m)']**2 + neutrons_df['CreationZ (m)']**2)
+
+    if {
+        'CreationX (m)',
+        'CreationY (m)',
+        'CreationZ (m)',
+    }.issubset(neutrons_df.columns):
+        dist = np.sqrt(
+            neutrons_df['CreationX (m)'] ** 2
+            + neutrons_df['CreationY (m)'] ** 2
+            + neutrons_df['CreationZ (m)'] ** 2
+        )
     elif 'ProductionDistance (m)' in neutrons_df.columns:
-        return neutrons_df['ProductionDistance (m)'].dropna()
+        dist = neutrons_df['ProductionDistance (m)'].dropna()
     else:
         x = neutrons_df.get('x', neutrons_df.get('CreationX', 0))
         y = neutrons_df.get('y', neutrons_df.get('CreationY', 0))
         z = neutrons_df.get('z', neutrons_df.get('CreationZ', 0))
-        return np.sqrt(x**2 + y**2 + z**2)
+        dist = np.sqrt(x**2 + y**2 + z**2)
+
+    # Convert mm to meters if data values are small (Geant4 defaults to mm)
+    if dist.max() > 0 and dist.quantile(0.95) < 10:
+        # If coordinates are already in meters, leave as-is
+        pass
+    else:
+        dist = dist / 1000.0  # Convert mm -> m
+
+    return dist
+
 
 dist_ftfp = extract_distance(df_ftfp)
 dist_shielding = extract_distance(df_shielding)
 
+# Match reference binning: 0 to 6.5 meters
 bins_distance = np.linspace(0, 6.5, 200)
 
 plt.figure(figsize=(9, 5.5))
@@ -207,18 +225,41 @@ counts_ftfp, bin_edges = np.histogram(dist_ftfp, bins=bins_distance)
 counts_shielding, _ = np.histogram(dist_shielding, bins=bins_distance)
 bin_centers = 0.5 * (bin_edges[:-1] + bin_edges[1:])
 
-plt.step(bin_centers, counts_ftfp, where='mid', color='#2ca02c', linestyle='-', linewidth=1.5, label='FTFP_BERT_HP')
-plt.step(bin_centers, counts_shielding, where='mid', color='#ff7f0e', linestyle='--', linewidth=1.5, label='Shielding_HP')
+plt.step(
+    bin_centers,
+    counts_ftfp,
+    where='mid',
+    color='#1f77b4',
+    linestyle='-',
+    linewidth=1.5,
+    label='FTFP_BERT_HP',
+)
+plt.step(
+    bin_centers,
+    counts_shielding,
+    where='mid',
+    color='#ff7f0e',
+    linestyle='--',
+    linewidth=1.5,
+    label='Shielding_HP',
+)
 
 plt.yscale('log')
 plt.xlabel('Neutron Production Distance From Lab (m)', fontsize=14)
 plt.ylabel('Count (a.u.)', fontsize=14)
+
+# Set x-limits to match reference scale
 plt.xlim(-0.3, 6.8)
-plt.ylim(0.6, 3e4)
+
+# Set dynamic log y-limits based on your maximum count
+max_count = max(counts_ftfp.max(), counts_shielding.max())
+if max_count > 0:
+    plt.ylim(0.6, max_count * 2)
+
 plt.xticks(np.arange(0.0, 6.5, 0.5), fontsize=12)
 plt.yticks(fontsize=12)
 plt.legend(fontsize=12, loc='upper right')
 plt.tight_layout()
 
-plt.savefig("plots/neutron_production_distance_comparison.png", dpi=300)
+plt.savefig('plots/neutron_production_distance_comparison.png', dpi=300)
 plt.close()
