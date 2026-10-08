@@ -1,0 +1,9 @@
+Traceback (most recent call last):
+  File "/home/taylor33/code/UndergroundLabs.py", line 150, in <module>
+    plot_simulation_flux(include_eqn6_fit=True, output_filename="Simulation_Neutron_Flux.png")
+  File "/home/taylor33/code/UndergroundLabs.py", line 122, in plot_simulation_flux
+    popt, _ = curve_fit(param_model, x_fit, y_fit, p0=[1.3e-3, 0.85, 1.1])
+              ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/cvmfs/soft.computecanada.ca/easybuild/software/2023/x86-64-v4/Compiler/gcccore/scipy-stack/2026a/lib/python3.11/site-packages/scipy/optimize/_minpack_py.py", line 1026, in curve_fit
+    raise RuntimeError("Optimal parameters not found: " + errmsg)
+RuntimeError: Optimal parameters not found: Number of calls to function has reached maxfev = 800.

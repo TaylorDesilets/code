@@ -4,7 +4,7 @@ import pandas as pd
 import matplotlib.pyplot as plt
 
 
-FTFP_PATH = "/home/taylor33/scratch/FTFP_1M.csv"
+FTFP_PATH = "/home/taylor33/scratch/ftfp_1M_final.csv"
 SHIELDING_PATH = "/home/taylor33/scratch/Shielding_secondary.csv"
 
 # Check if files exist, fallback to .csv.gz if uncompressed doesn't exist
@@ -182,40 +182,20 @@ plt.close()
 
 
 # PLOT 3: Neutron Production Distance From Lab (m)
+
 def extract_distance(df):
-    neutrons_df = df[df['secondaryName'] == 'neutron']
-
-    # 1. Check for standard metric columns
-    if {'CreationX (m)', 'CreationY (m)', 'CreationZ (m)'}.issubset(neutrons_df.columns):
-        dist = np.sqrt(
-            neutrons_df['CreationX (m)'] ** 2
-            + neutrons_df['CreationY (m)'] ** 2
-            + neutrons_df['CreationZ (m)'] ** 2
-        )
-        # Columns explicitly labeled with '(m)' are ALREADY in meters
-        return dist
-
-    elif 'ProductionDistance (m)' in neutrons_df.columns:
-        return neutrons_df['ProductionDistance (m)'].dropna()
-
-    else:
-        # Fallback for raw x, y, z columns (Geant4 default output is mm)
-        x = neutrons_df.get('x', neutrons_df.get('CreationX', 0))
-        y = neutrons_df.get('y', neutrons_df.get('CreationY', 0))
-        z = neutrons_df.get('z', neutrons_df.get('CreationZ', 0))
-        dist = np.sqrt(x**2 + y**2 + z**2)
-        
-        # Only divide by 1000 if raw values are large (i.e. in mm)
-        if dist.max() > 100:
-            dist = dist / 1000.0
-
-        return dist
-
+    secondary = df['secondaryName'].astype(str).str.strip().str.lower()
+    neutrons_df = df[secondary == 'neutron']
+    print(f"Number of neutrons: {len(neutrons_df)}")
+    if 'Depth (m)' not in neutrons_df.columns:
+        raise ValueError("Depth (m) column not found")
+    dist = neutrons_df['Depth (m)'].dropna()
+    print(f"Distance range: {dist.min():.4f} to {dist.max():.4f} m")
+    return dist
 
 dist_ftfp = extract_distance(df_ftfp)
 dist_shielding = extract_distance(df_shielding)
 
-# Match reference binning: 0 to 6.5 meters with 200 bins
 bins_distance = np.linspace(0, 6.5, 200)
 
 plt.figure(figsize=(9, 5.5), dpi=150)
@@ -224,43 +204,21 @@ counts_ftfp, bin_edges = np.histogram(dist_ftfp, bins=bins_distance)
 counts_shielding, _ = np.histogram(dist_shielding, bins=bins_distance)
 bin_centers = 0.5 * (bin_edges[:-1] + bin_edges[1:])
 
-# Plot step histograms
-plt.step(
-    bin_centers,
-    counts_ftfp,
-    where='mid',
-    color='#1f77b4',
-    linestyle='-',
-    linewidth=1.5,
-    label='FTFP_BERT_HP',
-)
-plt.step(
-    bin_centers,
-    counts_shielding,
-    where='mid',
-    color='#ff7f0e',
-    linestyle='--',
-    linewidth=1.5,
-    label='Shielding_HP',
-)
+plt.step(bin_centers, counts_ftfp, where='mid', color='#1f77b4', linestyle='-', linewidth=1.5, label='FTFP_BERT_HP')
+plt.step(bin_centers, counts_shielding, where='mid', color='#ff7f0e', linestyle='--', linewidth=1.5, label='Shielding_HP')
 
 plt.yscale('log')
 plt.xlabel('Neutron Production Distance From Lab (m)', fontsize=14)
 plt.ylabel('Count (a.u.)', fontsize=14)
-
-# Set x-limits to match reference scale
 plt.xlim(-0.3, 6.8)
 
-# Fixed Y-limits tailored for 1M events
-# Lower limit = 0.6 (filters out 0 counts), Upper limit dynamically scaled to peak count
 max_count = max(counts_ftfp.max(), counts_shielding.max())
-if max_count > 0:
-    plt.ylim(0.6, max_count * 2.5)
+if max_count > 0: plt.ylim(0.6, max_count * 2.0)
 
 plt.xticks(np.arange(0.0, 6.5, 0.5), fontsize=12)
 plt.yticks(fontsize=12)
 plt.legend(fontsize=12, loc='upper right')
 plt.tight_layout()
-
 plt.savefig('plots/neutron_production_distance_comparison.png', dpi=300)
+plt.show()
 plt.close()
