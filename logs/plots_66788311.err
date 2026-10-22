@@ -1,0 +1,7 @@
+Traceback (most recent call last):
+  File "/home/taylor33/code/UndergroundLabs.py", line 197, in <module>
+    plot_simulation_flux(include_eqn6_fit=True, output_filename="Simulation_Neutron_Flux.png")
+  File "/home/taylor33/code/UndergroundLabs.py", line 153, in plot_simulation_flux
+    y_fit_log = np.log10(y_fit)
+                         ^^^^^
+NameError: name 'y_fit' is not defined. Did you mean: 'x_fit'?

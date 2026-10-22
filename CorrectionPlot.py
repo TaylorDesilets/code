@@ -9,76 +9,69 @@ if not os.path.exists(SHIELDING_PATH) and os.path.exists("/home/taylor33/scratch
 
 print(f"Loading Shielding dataset from: {SHIELDING_PATH}")
 df = pd.read_csv(SHIELDING_PATH)
-df['secondaryName'] = df['secondaryName'].astype(str).str.strip()
-neutrons_df = df[df['secondaryName'] == 'neutron'].copy()
 
-# Update PRIMARIES_PER_RUN to match the total primary muons thrown in Geant4 per run macro
+# Clean column names and secondary names
+df.columns = [c.strip() for c in df.columns]
+
+if 'secondaryName' in df.columns:
+    df['secondaryName'] = df['secondaryName'].astype(str).str.strip()
+    neutrons_df = df[df['secondaryName'] == 'neutron'].copy()
+else:
+    neutrons_df = df.copy()
+
 PRIMARIES_PER_RUN = 1e6  
-
-#liquid scintillator material properties
-RHO_TARGET = 0.86  # Target density in g/cm^3
-MEAN_TRACK_LENGTH_CM = 100.0  # Path length / thickness in cm
+RHO_TARGET = 0.86  # g/cm^3
+MEAN_TRACK_LENGTH_CM = 100.0  # cm
 AREAL_DENSITY = RHO_TARGET * MEAN_TRACK_LENGTH_CM  # g/cm^2
 
-# hardcoded Experimental Data [E_mu (GeV), Yield (n / mu / g cm^-2), Error]
+# Experimental Data [E_mu (GeV), Yield, Error]
 E_mu_data  = np.array([16.5, 90.0, 128.0, 260.0, 340.0])
 data_yield = np.array([1.60e-5, 1.18e-4, 2.10e-4, 2.80e-4, 3.40e-4])
 data_err   = np.array([0.70e-5, 0.30e-4, 0.20e-4, 0.35e-4, 1.70e-4])
 
-# 5. Extract Unique Primary Energies and Calculate Yields
-# Find energy column dynamically
-energy_col = None
-for col in ['MuonInitialEnergy (GeV)']:
-    if col in df.columns:
-        energy_col = col
-        break
+energy_col = 'MuonInitialEnergy (GeV)'
 
-if energy_col is None:
-    raise KeyError(f"Could not find primary energy column in DataFrame. Available: {list(df.columns)}")
-
-# Convert to GeV if values are in MeV
-if df[energy_col].mean() > 1000:
+# Check maximum energy value to ensure MeV -> GeV conversion triggers reliably
+if neutrons_df[energy_col].max() > 1000:
     neutrons_df['E_mu_GeV'] = neutrons_df[energy_col] / 1000.0
 else:
     neutrons_df['E_mu_GeV'] = neutrons_df[energy_col]
 
-neutrons_df['E_mu_round'] = neutrons_df['E_mu_GeV'].round(1)
+target_energies = np.array([16.5, 90.0, 128.0, 260.0, 340.0])
 
 sim_E_mu, sim_yield, sim_err = [], [], []
 
-for energy, group in neutrons_df.groupby('E_mu_round'):
+# Dynamic proximity matching (window around target energy)
+for target_E in target_energies:
+    mask = (neutrons_df['E_mu_GeV'] >= target_E * 0.75) & (neutrons_df['E_mu_GeV'] <= target_E * 1.25)
+    group = neutrons_df[mask]
     n_count = len(group)
     
-    # Yield = N_neutrons / (N_mu * ArealDensity)
-    yield_val = n_count / (PRIMARIES_PER_RUN * AREAL_DENSITY)
-    yield_error = np.sqrt(n_count) / (PRIMARIES_PER_RUN * AREAL_DENSITY)
-    
-    sim_E_mu.append(energy)
-    sim_yield.append(yield_val)
-    sim_err.append(yield_error)
+    if n_count > 0:
+        yield_val = n_count / (PRIMARIES_PER_RUN * AREAL_DENSITY)
+        yield_error = np.sqrt(n_count) / (PRIMARIES_PER_RUN * AREAL_DENSITY)
+        
+        sim_E_mu.append(target_E)
+        sim_yield.append(yield_val)
+        sim_err.append(yield_error)
 
 sim_E_mu = np.array(sim_E_mu)
 sim_yield = np.array(sim_yield)
 sim_err = np.array(sim_err)
 
 def mei_hime_correction_factor(E_mu_GeV):
-    """
-    Computes the energy-dependent correction factor C(E_mu) from Eq. 5.
-    E_mu_GeV: Mean primary muon energy in GeV
-    """
+    """Computes energy-dependent correction factor C(E_mu) from Eq. 5."""
     denom = 1.0 - 0.314 * (E_mu_GeV ** 0.128) + 1.68e6 * (E_mu_GeV ** -5.793)
     return 1.0 / denom
 
-#energy-dependent factor for each simulated point
 corr_factors = mei_hime_correction_factor(sim_E_mu)
-
-#correction to yield and include the 8.5% systematic uncertainty mentioned in the text
 sim_corr_yield = sim_yield * corr_factors
 
-# Combine statistical error with the conservative 8.5% systematic error in quadrature
+# 8.5% systematic error added in quadrature
 sigma_corr = 0.085
-sim_corr_err = sim_corr_yield * np.sqrt((sim_err / sim_yield)**2 + sigma_corr**2)
+sim_corr_err = sim_corr_yield * np.sqrt((sim_err / np.maximum(sim_yield, 1e-12))**2 + sigma_corr**2)
 
+# Plotting
 os.makedirs("plots", exist_ok=True)
 plt.figure(figsize=(8, 6), dpi=150)
 
@@ -89,15 +82,14 @@ plt.errorbar(
     ms=5, capsize=4, capthick=1, label='Data'
 )
 
-# Uncorrected Simulation (Green)
+# Simulation Uncorrected (Green)
 if len(sim_E_mu) > 0:
     plt.errorbar(
         sim_E_mu, sim_yield, yerr=sim_err,
         fmt='o', color='darkgreen', ecolor='darkgreen',
         ms=5, capsize=4, capthick=1, label='Simulation'
     )
-
-    # Corrected Simulation (Orange/Brown)
+    # Simulation Corrected (Brown Triangles)
     plt.errorbar(
         sim_E_mu, sim_corr_yield, yerr=sim_corr_err,
         fmt='^', color='#b84500', ecolor='#b84500',

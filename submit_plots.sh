@@ -1,6 +1,6 @@
 #!/bin/bash
 #SBATCH --account=def-mariecci
-#SBATCH --job-name=undergroundlabs
+#SBATCH --job-name=UndergroundLabs
 #SBATCH --output=logs/plots_%j.out
 #SBATCH --error=logs/plots_%j.err
 #SBATCH --cpus-per-task=2
