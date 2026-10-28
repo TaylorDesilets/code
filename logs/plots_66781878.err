@@ -1,2 +1,0 @@
-/home/taylor33/code/UndergroundLabs.py:190: UserWarning: FigureCanvasAgg is non-interactive, and thus cannot be shown
-  plt.show()

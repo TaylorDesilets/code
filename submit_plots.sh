@@ -5,13 +5,12 @@
 #SBATCH --error=logs/plots_%j.err
 #SBATCH --cpus-per-task=2
 #SBATCH --mem=64G
-#SBATCH --time=01:30:00
-export MPLBACKEND=Agg
-# Load Python environment
-module load StdEnv/2023 python/3.11.5 scipy-stack
+#SBATCH --time=00:30:00
 
-# Ensure log directory exists
+export MPLBACKEND=Agg
+module load StdEnv/2023 python/3.11.5 scipy-stack
+source ~/mute_env/bin/activate
 mkdir -p logs
 
-# Run Python plotting script
+# Run MUTE data script
 python /home/taylor33/code/UndergroundLabs.py

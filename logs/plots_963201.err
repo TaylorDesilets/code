@@ -1,0 +1,9 @@
+/home/taylor33/code/GetMUTEData.py:18: UserWarning: Changing the reference density will trigger the computation of new transfer tensors (for advanced users).
+  mtc.set_reference_density(density)
+Traceback (most recent call last):
+  File "/home/taylor33/code/GetMUTEData.py", line 19, in <module>
+    mtc.load_mountain(mountain_file)  # Loads {mountain_file.lower()}_mountain.txt
+    ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/home/taylor33/mute_env/lib/python3.11/site-packages/mute/constants.py", line 532, in load_mountain
+    get_overburden() == "mountain"
+AssertionError: The overburden type must be set to "mountain".

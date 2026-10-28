@@ -1,5 +1,0 @@
-Traceback (most recent call last):
-  File "/home/taylor33/code/UndergroundLabs.py", line 95, in <module>
-    m_corr = get_multiplicity_correction(cfg['E_mu'])
-                                         ~~~^^^^^^^^
-KeyError: 'E_mu'
