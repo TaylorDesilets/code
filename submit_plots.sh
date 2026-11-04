@@ -1,6 +1,6 @@
 #!/bin/bash
 #SBATCH --account=def-mariecci
-#SBATCH --job-name=UndergroundLabs
+#SBATCH --job-name=GetMUTEData
 #SBATCH --output=logs/plots_%j.out
 #SBATCH --error=logs/plots_%j.err
 #SBATCH --cpus-per-task=2
@@ -13,4 +13,4 @@ source ~/mute_env/bin/activate
 mkdir -p logs
 
 # Run MUTE data script
-python /home/taylor33/code/UndergroundLabs.py
+python /home/taylor33/code/GetMUTEData.py

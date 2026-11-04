@@ -1,0 +1,113 @@
+*************************************************************************
+*                                                                       *
+*                ███████████████████████████████████████                *
+*                ▓  ▓▓▓▓  ▓▓  ▓▓▓▓  ▓▓        ▓▓       ▓                *
+*                ▓   ▓▓   ▓▓  ▓▓▓▓  ▓▓▓▓▓  ▓▓▓▓▓  ▓▓▓▓▓▓                *
+*                ▒        ▒▒  ▒▒▒▒  ▒▒▒▒▒  ▒▒▒▒▒       ▒                *
+*                ▒  ▒  ▒  ▒▒  ▒▒▒▒  ▒▒▒▒▒  ▒▒▒▒▒  ▒▒▒▒▒▒                *
+*                ░  ░░░░  ░░░░    ░░░░░░░  ░░░░░       ░                *
+*                ░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░                *
+*                   https://github.com/wjwoodley/mute                   *
+*                                                                       *
+* Author:  William Woodley                                              *
+* Version: 3.0.0                                                        *
+*                                                                       *
+* Please cite:                                                          *
+*  - https://inspirehep.net/literature/1927720                          *
+*  - https://inspirehep.net/literature/2799258                          *
+*  - The models used for daemonflux, MCEq, PROPOSAL, and mountain maps  *
+*                                                                       *
+*************************************************************************
+--- Processing Built-in Lab: SNOLAB ---
+Calculating underground fluxes.
+Loading surface fluxes for USStd using gsf and sibyll23c.
+Loaded surface fluxes.
+Loading survival probabilities from /home/taylor33/mute_env/lib/python3.11/site-packages/mute/data/survival_probabilities/rock_2.65_1000000_survival_probabilities.npy.
+Loaded survival probabilities.
+Finished calculating underground fluxes.
+Underground fluxes written to /home/taylor33/mute_env/lib/python3.11/site-packages/mute/data/underground/SNOLAB_underground_fluxes.txt.
+Calculating underground fluxes.
+Loading surface fluxes for USStd using gsf and sibyll23c.
+Loaded surface fluxes.
+Survival probabilities already loaded for rock with density 2.65 gcm^-3 and 1000000 muons.
+Finished calculating underground fluxes.
+Calculating underground intensities.
+Finished calculating underground intensities.
+Underground intensities written to /home/taylor33/mute_env/lib/python3.11/site-packages/mute/data/underground/SNOLAB_underground_intensities_sd.txt.
+Calculating underground fluxes.
+Loading surface fluxes for USStd using gsf and sibyll23c.
+Loaded surface fluxes.
+Survival probabilities already loaded for rock with density 2.65 gcm^-3 and 1000000 muons.
+Finished calculating underground fluxes.
+Underground energy spectrum written to /home/taylor33/mute_env/lib/python3.11/site-packages/mute/data/underground/SNOLAB_underground_energy_spectrum.txt.
+Saved: /home/taylor33/code/MUTEFiles/MUTE_SNOLAB_underground_intensities_dd.txt
+Saved: /home/taylor33/code/MUTEFiles/MUTE_SNOLAB_underground_energy_CDFs.txt
+--- Processing Built-in Lab: LNGS ---
+Calculating underground fluxes.
+Loading surface fluxes for USStd using gsf and sibyll23c.
+Loaded surface fluxes.
+Survival probabilities already loaded for rock with density 2.65 gcm^-3 and 1000000 muons.
+Finished calculating underground fluxes.
+Underground fluxes written to /home/taylor33/mute_env/lib/python3.11/site-packages/mute/data/underground/LNGS_underground_fluxes.txt.
+Calculating underground fluxes.
+Loading surface fluxes for USStd using gsf and sibyll23c.
+Loaded surface fluxes.
+Survival probabilities already loaded for rock with density 2.65 gcm^-3 and 1000000 muons.
+Finished calculating underground fluxes.
+Calculating underground intensities.
+Finished calculating underground intensities.
+Underground intensities written to /home/taylor33/mute_env/lib/python3.11/site-packages/mute/data/underground/LNGS_underground_intensities_sd.txt.
+Calculating underground fluxes.
+Loading surface fluxes for USStd using gsf and sibyll23c.
+Loaded surface fluxes.
+Survival probabilities already loaded for rock with density 2.65 gcm^-3 and 1000000 muons.
+Finished calculating underground fluxes.
+Underground energy spectrum written to /home/taylor33/mute_env/lib/python3.11/site-packages/mute/data/underground/LNGS_underground_energy_spectrum.txt.
+Saved: /home/taylor33/code/MUTEFiles/MUTE_LNGS_underground_intensities_dd.txt
+Saved: /home/taylor33/code/MUTEFiles/MUTE_LNGS_underground_energy_CDFs.txt
+--- Processing Built-in Lab: Boulby ---
+Calculating underground fluxes.
+Loading surface fluxes for USStd using gsf and sibyll23c.
+Loaded surface fluxes.
+Survival probabilities already loaded for rock with density 2.65 gcm^-3 and 1000000 muons.
+Finished calculating underground fluxes.
+Underground fluxes written to /home/taylor33/mute_env/lib/python3.11/site-packages/mute/data/underground/Boulby_underground_fluxes.txt.
+Calculating underground fluxes.
+Loading surface fluxes for USStd using gsf and sibyll23c.
+Loaded surface fluxes.
+Survival probabilities already loaded for rock with density 2.65 gcm^-3 and 1000000 muons.
+Finished calculating underground fluxes.
+Calculating underground intensities.
+Finished calculating underground intensities.
+Underground intensities written to /home/taylor33/mute_env/lib/python3.11/site-packages/mute/data/underground/Boulby_underground_intensities_sd.txt.
+Calculating underground fluxes.
+Loading surface fluxes for USStd using gsf and sibyll23c.
+Loaded surface fluxes.
+Survival probabilities already loaded for rock with density 2.65 gcm^-3 and 1000000 muons.
+Finished calculating underground fluxes.
+Underground energy spectrum written to /home/taylor33/mute_env/lib/python3.11/site-packages/mute/data/underground/Boulby_underground_energy_spectrum.txt.
+Saved: /home/taylor33/code/MUTEFiles/MUTE_Boulby_underground_intensities_dd.txt
+Saved: /home/taylor33/code/MUTEFiles/MUTE_Boulby_underground_energy_CDFs.txt
+--- Processing Built-in Lab: KamLAND ---
+Calculating underground fluxes.
+Loading surface fluxes for USStd using gsf and sibyll23c.
+Loaded surface fluxes.
+Survival probabilities already loaded for rock with density 2.65 gcm^-3 and 1000000 muons.
+Finished calculating underground fluxes.
+Underground fluxes written to /home/taylor33/mute_env/lib/python3.11/site-packages/mute/data/underground/KamLAND_underground_fluxes.txt.
+Calculating underground fluxes.
+Loading surface fluxes for USStd using gsf and sibyll23c.
+Loaded surface fluxes.
+Survival probabilities already loaded for rock with density 2.65 gcm^-3 and 1000000 muons.
+Finished calculating underground fluxes.
+Calculating underground intensities.
+Finished calculating underground intensities.
+Underground intensities written to /home/taylor33/mute_env/lib/python3.11/site-packages/mute/data/underground/KamLAND_underground_intensities_sd.txt.
+Calculating underground fluxes.
+Loading surface fluxes for USStd using gsf and sibyll23c.
+Loaded surface fluxes.
+Survival probabilities already loaded for rock with density 2.65 gcm^-3 and 1000000 muons.
+Finished calculating underground fluxes.
+Underground energy spectrum written to /home/taylor33/mute_env/lib/python3.11/site-packages/mute/data/underground/KamLAND_underground_energy_spectrum.txt.
+Saved: /home/taylor33/code/MUTEFiles/MUTE_KamLAND_underground_intensities_dd.txt
+Saved: /home/taylor33/code/MUTEFiles/MUTE_KamLAND_underground_energy_CDFs.txt
