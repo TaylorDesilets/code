@@ -3,109 +3,94 @@ import numpy as np
 import pandas as pd
 import matplotlib.pyplot as plt
 
-SHIELDING_PATH = "/home/taylor33/scratch/Shielding_secondary.csv.gz"
-if not os.path.exists(SHIELDING_PATH) and os.path.exists("/home/taylor33/scratch/Shielding_secondary.csv"):
-    SHIELDING_PATH = "/home/taylor33/scratch/Shielding_secondary.csv"
 
-print(f"Loading Shielding dataset from: {SHIELDING_PATH}")
-df = pd.read_csv(SHIELDING_PATH)
+BASE_DIR = "/home/taylor33/scratch/"
+SYS_ERR_FRACTION = 0.085  
 
-# Clean column names and secondary names
-df.columns = [c.strip() for c in df.columns]
+SITES_CONFIG = {
+    'CURIE': {
+        'path': os.path.join(BASE_DIR, 'Shielding_secondary.csv.gz'),
+        'depth': 0.40,
+        'N_mu': 1e6
+    }
+}
+TARGET_RHO_L = 100.0  
 
-if 'secondaryName' in df.columns:
-    df['secondaryName'] = df['secondaryName'].astype(str).str.strip()
-    neutrons_df = df[df['secondaryName'] == 'neutron'].copy()
-else:
-    neutrons_df = df.copy()
+def get_multiplicity_correction(E_mu):
+    """Eq5: Geant4 empirical multiplicity bias correction."""
+    return 1.0 / (1.0 - 0.314 * (E_mu ** 0.128) + 1.68e6 * (E_mu ** -5.793))
 
-PRIMARIES_PER_RUN = 1e6  
-RHO_TARGET = 0.86  # g/cm^3
-MEAN_TRACK_LENGTH_CM = 100.0  # cm
-AREAL_DENSITY = RHO_TARGET * MEAN_TRACK_LENGTH_CM  # g/cm^2
-
-# Experimental Data [E_mu (GeV), Yield, Error]
-E_mu_data  = np.array([16.5, 90.0, 128.0, 260.0, 340.0])
-data_yield = np.array([1.60e-5, 1.18e-4, 2.10e-4, 2.80e-4, 3.40e-4])
-data_err   = np.array([0.70e-5, 0.30e-4, 0.20e-4, 0.35e-4, 1.70e-4])
-
-energy_col = 'MuonInitialEnergy (GeV)'
-
-# Check maximum energy value to ensure MeV -> GeV conversion triggers reliably
-if neutrons_df[energy_col].max() > 1000:
-    neutrons_df['E_mu_GeV'] = neutrons_df[energy_col] / 1000.0
-else:
-    neutrons_df['E_mu_GeV'] = neutrons_df[energy_col]
-
-target_energies = np.array([16.5, 90.0, 128.0, 260.0, 340.0])
-
-sim_E_mu, sim_yield, sim_err = [], [], []
-
-# Dynamic proximity matching (window around target energy)
-for target_E in target_energies:
-    mask = (neutrons_df['E_mu_GeV'] >= target_E * 0.75) & (neutrons_df['E_mu_GeV'] <= target_E * 1.25)
-    group = neutrons_df[mask]
-    n_count = len(group)
+def get_site_metrics(file_path):
+    """Extracts mean muon energy E_mu and neutron count from CSV."""
+    path = file_path
+    if not os.path.exists(path) and os.path.exists(path + ".gz"):
+        path += ".gz"
+    if not os.path.exists(path):
+        print(f"Error: File not found: {path}")
+        return None, None
     
-    if n_count > 0:
-        yield_val = n_count / (PRIMARIES_PER_RUN * AREAL_DENSITY)
-        yield_error = np.sqrt(n_count) / (PRIMARIES_PER_RUN * AREAL_DENSITY)
+    df = pd.read_csv(path)
+    
+    if 'MuonInitialEnergy (GeV)' in df.columns:
+        E_mu_mean = df['MuonInitialEnergy (GeV)'].mean()
+    elif 'MuonInitialEnergy' in df.columns:
+        E_mu_mean = df['MuonInitialEnergy'].mean()
+    else:
+        raise KeyError("Could not find 'MuonInitialEnergy' column in CSV.")
+    
+    if 'secondaryName' in df.columns:
+        df['secondaryName'] = df['secondaryName'].astype(str).str.strip()
+        n_count = len(df[df['secondaryName'] == 'neutron'])
+    else:
+        n_count = len(df)
         
-        sim_E_mu.append(target_E)
-        sim_yield.append(yield_val)
-        sim_err.append(yield_error)
+    return n_count, E_mu_mean
 
-sim_E_mu = np.array(sim_E_mu)
-sim_yield = np.array(sim_yield)
-sim_err = np.array(sim_err)
 
-def mei_hime_correction_factor(E_mu_GeV):
-    """Computes energy-dependent correction factor C(E_mu) from Eq. 5."""
-    denom = 1.0 - 0.314 * (E_mu_GeV ** 0.128) + 1.68e6 * (E_mu_GeV ** -5.793)
-    return 1.0 / denom
+site_cfg = SITES_CONFIG['CURIE']
+n_count, E_mu = get_site_metrics(site_cfg['path'])
 
-corr_factors = mei_hime_correction_factor(sim_E_mu)
-sim_corr_yield = sim_yield * corr_factors
+if n_count is not None and E_mu is not None:
+    N_mu = site_cfg['N_mu']
+    
+    y_sim = n_count / (N_mu * TARGET_RHO_L)
+    stat_err_sim = (np.sqrt(n_count) / (N_mu * TARGET_RHO_L)) if n_count > 0 else 0
+    
+    m_corr = get_multiplicity_correction(E_mu)
+    y_corr = y_sim * m_corr
+    stat_err_corr = stat_err_sim * m_corr
+    tot_err_corr = np.sqrt(stat_err_corr**2 + (y_corr * SYS_ERR_FRACTION)**2)
+    print(f"  Mean Muon Energy (E_mu): {E_mu:.2f} GeV")
+    print(f"  Neutron Count:           {n_count}")
+    print(f"  Uncorrected Yield:      {y_sim:.3e}")
+    print(f"  Multiplicity Factor:    {m_corr:.3f}")
+    print(f"  Corrected Yield:        {y_corr:.3e}")
+    plt.figure(figsize=(7, 6), dpi=150)
 
-# 8.5% systematic error added in quadrature
-sigma_corr = 0.085
-sim_corr_err = sim_corr_yield * np.sqrt((sim_err / np.maximum(sim_yield, 1e-12))**2 + sigma_corr**2)
-
-# Plotting
-os.makedirs("plots", exist_ok=True)
-plt.figure(figsize=(8, 6), dpi=150)
-
-# Data (Blue)
-plt.errorbar(
-    E_mu_data, data_yield, yerr=data_err,
-    fmt='o', color='#1f77b4', ecolor='#1f77b4',
-    ms=5, capsize=4, capthick=1, label='Data'
-)
-
-# Simulation Uncorrected (Green)
-if len(sim_E_mu) > 0:
     plt.errorbar(
-        sim_E_mu, sim_yield, yerr=sim_err,
+        [E_mu], [y_sim], yerr=[stat_err_sim],
         fmt='o', color='darkgreen', ecolor='darkgreen',
-        ms=5, capsize=4, capthick=1, label='Simulation'
+        capsize=4, elinewidth=1.2, label='Simulation', zorder=3
     )
-    # Simulation Corrected (Brown Triangles)
+
     plt.errorbar(
-        sim_E_mu, sim_corr_yield, yerr=sim_corr_err,
-        fmt='^', color='#b84500', ecolor='#b84500',
-        ms=6, capsize=4, capthick=1, label='Simulation Corrected'
+        [E_mu], [y_corr], yerr=[tot_err_corr],
+        fmt='^', color='#a04000', ecolor='#d35400',
+        capsize=4, elinewidth=1.2, label='Simulation Corrected', zorder=4
     )
 
-plt.yscale('log')
-plt.xlabel(r'$E_{\mu}$ (GeV)', fontsize=16)
-plt.ylabel(r'Neutron Yield $\left(\frac{\text{n}}{\mu \cdot \text{g}\cdot\text{cm}^{-2}}\right)$', fontsize=16)
-plt.xlim(-5, 360)
-plt.ylim(7e-6, 5e-4)
-plt.xticks(np.arange(0, 400, 50), fontsize=12)
-plt.yticks(fontsize=12)
-plt.grid(True, which='both', color='gainsboro', linestyle='-', linewidth=0.5, alpha=0.5)
-plt.legend(fontsize=13, loc='upper left', frameon=True)
-plt.tight_layout()
+    plt.yscale('log')
+    plt.xlim(0, max(150.0, E_mu * 1.5)) 
+    plt.ylim(1e-6, 1e-3)
 
-plt.savefig("plots/neutron_yield_vs_Emu_shielding.png", dpi=300)
-plt.show()
+    plt.xlabel(r'$E_\mu$ (GeV)', fontsize=14)
+    plt.ylabel(r'Neutron Yield $\left(\frac{n}{\mu \, \text{g cm}^{-2}}\right)$', fontsize=14)
+
+    plt.grid(True, which='both', linestyle=':', color='gainsboro', alpha=0.7)
+    plt.tick_params(axis='both', which='major', labelsize=12, direction='in', length=6)
+    plt.tick_params(axis='both', which='minor', direction='in', length=3)
+
+    plt.legend(fontsize=12, loc='upper left', frameon=True, edgecolor='gainsboro')
+    plt.tight_layout()
+    plt.savefig('simulation_yield.png', dpi=300)
+    plt.show()

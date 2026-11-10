@@ -105,9 +105,14 @@ def get_multiplicity_correction(E_mu):
     return 1.0 / (1.0 - 0.314 * (E_mu**0.128) + 1.68e6 * (E_mu**-5.793))
 
 def mei_hime_flux(X):
-    """Mei & Hime (2006) parametrization"""
-    A, X0, n = 2.0e-3, 0.85, 1.1  
-    return A * ((X0 / X) ** n) * np.exp(-X / X0)
+    """
+    Mei & Hime (2006) Eq. (13) Parametrization for total neutron flux in standard rock.
+    P0 = 4.0e-7 cm^-2 s^-1 = 4.0e-3 m^-2 s^-1
+    P1 = 0.86 km.w.e.
+    """
+    P0 = 4.0e-3  # m^-2 s^-1
+    P1 = 0.86    # km.w.e.
+    return P0 * (P1 / X) * np.exp(-X / P1)
 
 def param_model(X, A, X0, n):
     """Eq6: parameterization for fitting"""
