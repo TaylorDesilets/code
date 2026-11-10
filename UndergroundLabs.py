@@ -5,45 +5,57 @@ import matplotlib.pyplot as plt
 import matplotlib.ticker as ticker
 from scipy.optimize import curve_fit
 
-BASE_DIR = "/home/taylor33/scratch/"
+BASE_DIR = "/home/taylor33/code/SimCSVs/"
 save_path = "/home/taylor33/code/plots/"
 
 SITES_CONFIG = {
-    'CURIE': {
-        'path': os.path.join(BASE_DIR, 'escaped_secondary_hideout.csv'),
-        'depth': 0.40,               # km.w.e.
-        'area': 66.2,                # area of rock cavern not including floor in m^2
-        'R_gen': 8.4,                # Primary generation hemisphere radius in meters
-        'Phi_mu': 1.15e-1,           # Primary muon flux (m^-2 s^-1)
-        'color': '#ff7f0e',          # Orange
-        'marker': '*',
-        'ms': 10
-    },
+    #'CURIE': {
+     #   'path': os.path.join(BASE_DIR, 'escaped_secondary_hideout.csv'),
+      #  'depth': 0.40,               # km.w.e.
+       # 'area': 66.2,                # area of rock cavern not including floor in m^2
+       # 'R_gen': 8.4,                # Primary generation hemisphere radius in meters
+       # 'Phi_mu': 1.15e-1,           # Primary muon flux (m^-2 s^-1)
+       # 'color': '#ff7f0e',          # Orange
+       # 'marker': '*',
+       # 'ms': 10
+    #},
 
-    'Soudan': {
-        'path': os.path.join(BASE_DIR, 'escaped_secondary_soudan.csv'),
-        'depth': 1.95,
-        'area': 66.2,                # soudan 2 cavern where CDMS 2 is 3620
-        'R_gen': 8.4,                
-        'Phi_mu': 2.00e-3,
-        'color': '#d62728',          # Red
-        'marker': '*',
-        'ms': 10
-    },
+    #'Soudan': {
+    #    'path': os.path.join(BASE_DIR, 'escaped_secondary_soudan.csv'),
+    #    'depth': 1.95,
+    #    'area': 66.2,                # soudan 2 cavern where CDMS 2 is 3620
+    #    'R_gen': 8.4,                
+    #    'Phi_mu': 2.00e-3,
+    #    'color': '#d62728',          # Red
+    #    'marker': '*',
+    #    'ms': 10
+    #},
 
-    'Kamioka': {
-        'path': os.path.join(BASE_DIR, 'escaped_secondary_kamland.csv'),
-        'depth': 2.05,
-        'area': 66.2,               # Where Hyper Kamiokande is (newly excavated) 2091
-        'R_gen': 8.4,                
-        'Phi_mu': 1.50e-3,
-        'color': '#bcbd22',          # Yellow-green
-        'marker': '*',
-        'ms': 10
-    },
+    #'Kamioka': {
+    #    'path': os.path.join(BASE_DIR, 'escaped_secondary_kamland.csv'),
+    #    'depth': 2.05,
+    #    'area': 66.2,               # Where Hyper Kamiokande is (newly excavated) 2091
+    #    'R_gen': 8.4,                
+    #    'Phi_mu': 1.50e-3,
+    #    'color': '#bcbd22',          # Yellow-green
+    #    'marker': '*',
+    #    'ms': 10
+    #},
 
+	#
+	'Boulby': {
+
+    	    'path': os.path.join(BASE_DIR, 'MUTE_Boulby.csv'),
+    	    'depth': 1.1,
+    	    'area': 66.2,              
+    	    'R_gen': 8.4,
+    	    'Phi_mu': 4.09,
+    	    'color': '#0000FF',          # Blue
+    	    'marker': '*',
+    	    'ms': 10
+    	},
     'Gran Sasso': {
-        'path': os.path.join(BASE_DIR, 'escaped_secondary_lngs.csv'),
+        'path': os.path.join(BASE_DIR, 'MUTE_LNGS.csv'),
         'depth': 3.10,
         'area': 66.2,                # Hall C (Where NEWS is) 5376
         'R_gen': 8.4,                
@@ -54,7 +66,7 @@ SITES_CONFIG = {
     },
 
     'SNOLAB': {
-        'path': os.path.join(BASE_DIR, 'escaped_secondary_snolab.csv'),
+        'path': os.path.join(BASE_DIR, 'MUTE_SNOLAB.csv'),
         'depth': 6.00,
         'area': 66.2,                 # cube hall 276
         'R_gen': 8.4,             
@@ -217,4 +229,4 @@ def plot_simulation_flux(include_eqn6_fit=True, output_filename="Simulation_Neut
     print(f"Plot saved to {full_output_path}")
     plt.show()
 
-plot_simulation_flux(include_eqn6_fit=True, output_filename="Simulation_Neutron_Flux.png")
+plot_simulation_flux(include_eqn6_fit=True, output_filename="MUTE_Sims_No_NEWSG.png")
