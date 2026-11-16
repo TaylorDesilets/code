@@ -109,11 +109,20 @@ def get_site_metrics(file_path):
     else:
         n_mu_simulated = len(df)
 
-    return n_count, E_mu_mean, n_mu_simulated
+    # Simulated neutron multiplicity
+    M_sim = n_count / n_mu_simulated if n_mu_simulated > 0 else 0.0
 
-def get_multiplicity_correction(E_mu):
-    """Eq5: Geant4 empirical multiplicity bias correction."""
-    return 1.0 / (1.0 - 0.314 * (E_mu**0.128) + 1.68e6 * (E_mu**-5.793))
+    return n_count, E_mu_mean, n_mu_simulated, M_sim
+
+
+def get_multiplicity_correction(E_mu, M_sim):
+    """
+    Eq5: Geant4 empirical multiplicity bias correction
+    E_mu = muon energy
+    M_sim = simulated neutron multiplicity
+    Returns M_corr = corrected neutron multiplicity
+    """
+    return M_sim / (1.0 - 0.314 * (E_mu**0.128) + 1.68e6 * (E_mu**-5.793))
 
 def mei_hime_flux(X):
     """
@@ -126,7 +135,13 @@ def mei_hime_flux(X):
     return P0 * (P1 / X) * np.exp(-X / P1)
 
 def param_model(X, A, X0, n):
-    """Eq6: parameterization for fitting"""
+    """
+    Eq6: parameterization for fitting
+    A = 0.003+- 0.001m^-2s^-1
+    X0 = 1.015 +- 0.083km.w.e
+    n = 1.562+- 0.192
+    X = Simulation Neutron Flux 
+    """
     return A * ((X0 / X) ** n) * np.exp(-X / X0)
 
 def sim_livetime(n_mu_simulated, phi_mu, r_gen):
@@ -140,20 +155,20 @@ print("-" * 72)
 
 sim_data = {}
 for site, cfg in SITES_CONFIG.items():
-    n_count, E_mu_calculated, N_mu_simulated = get_site_metrics(cfg['path'])
+    n_count, E_mu_calculated, N_mu_simulated, M_sim = get_site_metrics(cfg['path'])
     if n_count is None:
         continue
 
     fname = os.path.basename(cfg['path'])
     print(f"{site:<15} | {fname:<30} | {N_mu_simulated:>22,}")
 
-    m_corr = get_multiplicity_correction(E_mu_calculated)
-    corr_n_count = n_count * m_corr
+    M_corr = get_multiplicity_correction(E_mu_calculated, M_sim)
+    N_s = M_corr * N_mu_simulated  # Total corrected neutron count
 
     t_live = sim_livetime(N_mu_simulated, cfg['Phi_mu'], cfg['R_gen'])
-    flux = corr_n_count / (t_live * cfg['area']) #  Phi_RC = N_s / (T_live * A_cavern)
+    flux = N_s / (t_live * cfg['area'])  # Phi_RC = N_s / (T_live * A_cavern)
 
-    stat_err = np.sqrt(corr_n_count) / (t_live * cfg['area']) if corr_n_count > 0 else 0
+    stat_err = np.sqrt(N_s) / (t_live * cfg['area']) if N_s > 0 else 0
     total_err = np.sqrt(stat_err**2 + (flux * SYS_ERR_FRACTION)**2)
 
     sim_data[site] = {

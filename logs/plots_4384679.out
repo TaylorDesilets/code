@@ -1,9 +1,0 @@
-========================================================================
-Site            | Filename                       | Simulated Primary Muons (N_mu)
-------------------------------------------------------------------------
-Kamioka         | MUTE_KamLAND.csv               |                999,958
-Boulby          | MUTE_Boulby.csv                |                999,998
-Gran Sasso      | MUTE_LNGS.csv                  |                999,995
-SNOLAB          | MUTE_snolab.csv                |                999,997
-========================================================================
-Plot saved to /home/taylor33/code/plots/MUTE_Sims_No_NEWSG.png
