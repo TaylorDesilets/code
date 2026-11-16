@@ -5,7 +5,7 @@ import matplotlib.pyplot as plt
 import matplotlib.ticker as ticker
 from scipy.optimize import curve_fit
 
-BASE_DIR = "/home/taylor33/code/SimCSVs/"
+BASE_DIR = "/home/taylor33/scratch"
 save_path = "/home/taylor33/code/plots/"
 
 SITES_CONFIG = {
@@ -31,18 +31,17 @@ SITES_CONFIG = {
     #    'ms': 10
     #},
 
-    #'Kamioka': {
-    #    'path': os.path.join(BASE_DIR, 'escaped_secondary_kamland.csv'),
-    #    'depth': 2.05,
-    #    'area': 66.2,               # Where Hyper Kamiokande is (newly excavated) 2091
-    #    'R_gen': 8.4,                
-    #    'Phi_mu': 1.50e-3,
-    #    'color': '#bcbd22',          # Yellow-green
-    #    'marker': '*',
-    #    'ms': 10
-    #},
+    'Kamioka': {
+        'path': os.path.join(BASE_DIR, 'MUTE_KamLAND.csv'),
+        'depth': 2.05,
+        'area': 66.2,               # Where Hyper Kamiokande is (newly excavated) 2091
+        'R_gen': 8.4,                
+        'Phi_mu': 1.50e-3,
+        'color': '#bcbd22',          # Yellow-green
+        'marker': '*',
+        'ms': 10
+    },
 
-	#
 	'Boulby': {
 
     	    'path': os.path.join(BASE_DIR, 'MUTE_Boulby.csv'),
@@ -66,7 +65,7 @@ SITES_CONFIG = {
     },
 
     'SNOLAB': {
-        'path': os.path.join(BASE_DIR, 'MUTE_SNOLAB.csv'),
+        'path': os.path.join(BASE_DIR, 'MUTE_snolab.csv'),
         'depth': 6.00,
         'area': 66.2,                 # cube hall 276
         'R_gen': 8.4,             
