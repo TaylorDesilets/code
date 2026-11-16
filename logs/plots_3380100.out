@@ -1,8 +1,0 @@
-========================================================================
-Site            | Filename                       | Simulated Primary Muons (N_mu)
-------------------------------------------------------------------------
-Boulby          | MUTE_Boulby.csv                |                 10,000
-Gran Sasso      | MUTE_LNGS.csv                  |                  9,976
-SNOLAB          | MUTE_SNOLAB.csv                |                    986
-========================================================================
-Plot saved to /home/taylor33/code/plots/MUTE_Sims_No_NEWSG.png

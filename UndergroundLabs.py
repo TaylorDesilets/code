@@ -45,7 +45,7 @@ SITES_CONFIG = {
 	'Boulby': {
 
     	    'path': os.path.join(BASE_DIR, 'MUTE_Boulby.csv'),
-    	    'depth': 1.1,
+    	    'depth': 2.805,
     	    'area': 66.2,              
     	    'R_gen': 8.4,
     	    'Phi_mu': 4.09,
@@ -226,6 +226,5 @@ def plot_simulation_flux(include_eqn6_fit=True, output_filename="Simulation_Neut
     full_output_path = os.path.join(target_dir, output_filename)
     plt.savefig(full_output_path, dpi=300)
     print(f"Plot saved to {full_output_path}")
-    plt.show()
 
 plot_simulation_flux(include_eqn6_fit=True, output_filename="MUTE_Sims_No_NEWSG.png")
