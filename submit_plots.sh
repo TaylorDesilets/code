@@ -5,7 +5,7 @@
 #SBATCH --error=logs/plots_%j.err
 #SBATCH --cpus-per-task=2
 #SBATCH --mem=64G
-#SBATCH --time=00:30:00
+#SBATCH --time=04:00:00
 
 export MPLBACKEND=Agg
 module load StdEnv/2023 python/3.11.5 scipy-stack
