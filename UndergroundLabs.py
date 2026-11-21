@@ -42,17 +42,17 @@ SITES_CONFIG = {
         'ms': 10
     },
 
-	'Boulby': {
+    'Boulby': {
+        'path': os.path.join(BASE_DIR, 'MUTE_Boulby.csv'),
+        'depth': 2.805,
+        'area': 66.2,              
+        'R_gen': 8.4,
+        'Phi_mu': 4.09,
+        'color': '#0000FF',          # Blue
+        'marker': '*',
+        'ms': 10
+    },
 
-    	    'path': os.path.join(BASE_DIR, 'MUTE_Boulby.csv'),
-    	    'depth': 2.805,
-    	    'area': 66.2,              
-    	    'R_gen': 8.4,
-    	    'Phi_mu': 4.09,
-    	    'color': '#0000FF',          # Blue
-    	    'marker': '*',
-    	    'ms': 10
-    	},
     'Gran Sasso': {
         'path': os.path.join(BASE_DIR, 'MUTE_LNGS.csv'),
         'depth': 3.10,
@@ -78,13 +78,14 @@ SITES_CONFIG = {
 
 SYS_ERR_FRACTION = 0.085  
 
+
 def get_site_metrics(file_path):
     path = file_path
     if not os.path.exists(path) and os.path.exists(path + ".gz"):
         path += ".gz"
     if not os.path.exists(path):
         print(f"Warning: File not found: {path}. Skipping.")
-        return None, None, None
+        return None, None, None, None
 
     df = pd.read_csv(path)
 
@@ -124,6 +125,7 @@ def get_multiplicity_correction(E_mu, M_sim):
     """
     return M_sim / (1.0 - 0.314 * (E_mu**0.128) + 1.68e6 * (E_mu**-5.793))
 
+
 def mei_hime_flux(X):
     """
     Mei & Hime (2006) Eq. (13) Parametrization for total neutron flux in standard rock.
@@ -134,20 +136,33 @@ def mei_hime_flux(X):
     P1 = 0.86    # km.w.e.
     return P0 * (P1 / X) * np.exp(-X / P1)
 
+
 def param_model(X, A, X0, n):
     """
     Eq6: parameterization for fitting
     A = 0.003+- 0.001m^-2s^-1
     X0 = 1.015 +- 0.083km.w.e
     n = 1.562+- 0.192
-    X = Simulation Neutron Flux 
+    X = Depth (km.w.e.)
     """
     return A * ((X0 / X) ** n) * np.exp(-X / X0)
+
 
 def sim_livetime(n_mu_simulated, phi_mu, r_gen):
     """simulation livetime in seconds from primary generation surface."""
     a_gen = 2.0 * np.pi * (r_gen ** 2)
     return n_mu_simulated / (phi_mu * a_gen)
+
+
+def format_flux_with_err(val, err):
+    """Formats val +/- err in shared scientific notation for the plot legend."""
+    if val == 0:
+        return r"0.00 \pm 0.00"
+    exp = int(np.floor(np.log10(abs(val))))
+    mant_val = val / (10 ** exp)
+    mant_err = err / (10 ** exp)
+    return rf"({mant_val:.2f} \pm {mant_err:.2f}) \times 10^{{{exp}}}"
+
 
 print("=" * 72)
 print(f"{'Site':<15} | {'Filename':<30} | {'Simulated Primary Muons (N_mu)':>22}")
@@ -181,6 +196,7 @@ for site, cfg in SITES_CONFIG.items():
     }
 
 print("=" * 72)
+
 
 def plot_simulation_flux(include_eqn6_fit=True, output_filename="Simulation_Neutron_Flux.png", target_dir=save_path):
     plt.figure(figsize=(9, 6.5), dpi=150)
@@ -217,10 +233,12 @@ def plot_simulation_flux(include_eqn6_fit=True, output_filename="Simulation_Neut
         plt.fill_between(X_mesh, flux_fit * 0.6, flux_fit * 1.6, color='red', alpha=0.12, label=r'Sim Fit $\pm 1\sigma$')
 
     for label, item in sim_data.items():
+        flux_label = format_flux_with_err(item['flux'], item['err'])
         plt.errorbar(
             item['depth'], item['flux'], yerr=item['err'], fmt=item['marker'],
             color=item['color'], ecolor=item['color'], ms=item['ms'],
-            markeredgecolor='black', markeredgewidth=0.7, capsize=3, label=f"{label} (Sim)"
+            markeredgecolor='black', markeredgewidth=0.7, capsize=3,
+            label=rf"{label} (Sim): ${flux_label}\ \mathrm{{m^{{-2}}\,s^{{-1}}}}$"
         )
 
     plt.yscale('log')
@@ -234,12 +252,13 @@ def plot_simulation_flux(include_eqn6_fit=True, output_filename="Simulation_Neut
     plt.yticks(fontsize=12)
     
     plt.grid(True, which='both', color='gainsboro', linestyle='-', linewidth=0.5, alpha=0.7)
-    plt.legend(fontsize=9, loc='upper right', frameon=True, ncol=2)
+    plt.legend(fontsize=8.5, loc='upper right', frameon=True, ncol=1)
     plt.tight_layout()
 
     os.makedirs(target_dir, exist_ok=True)
     full_output_path = os.path.join(target_dir, output_filename)
     plt.savefig(full_output_path, dpi=300)
     print(f"Plot saved to {full_output_path}")
+
 
 plot_simulation_flux(include_eqn6_fit=True, output_filename="MUTE_Sims_No_NEWSG.png")
