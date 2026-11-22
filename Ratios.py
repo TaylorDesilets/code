@@ -20,13 +20,13 @@ SITES = [
 AREA_CAVERN = 66.2  # Rock-cavern boundary surface area (m^2)
 R_GEN = 8.4         # Primary generation hemisphere radius (m)
 
-# Full Table III systematic uncertainty quadrature (~18.3%)[cite: 1]
+# Full Table III systematic uncertainty quadrature (~18.3%)
 SYS_COMPONENTS = [0.085, 0.050, 0.100, 0.100, 0.060, 0.005]
 SYS_ERR_FRACTION = np.sqrt(sum(v**2 for v in SYS_COMPONENTS))
 
 
 def compute_neutron_flux(csv_path, phi_mu):
-    """Computes muon-induced neutron flux (m^-2 s^-1) and total uncertainty from Geant4 CSV[cite: 1]."""
+    """Computes muon-induced neutron flux (m^-2 s^-1) and total uncertainty from Geant4 CSV."""
     df = pd.read_csv(csv_path)
     e_mu_mean = (
         df["MuonInitialEnergy (GeV)"].mean()
@@ -43,7 +43,7 @@ def compute_neutron_flux(csv_path, phi_mu):
     n_mu = df["EventID"].max() + 1 if ("EventID" in df.columns and len(df) > 0) else len(df)
     m_sim = n_count / n_mu if n_mu > 0 else 0.0
 
-    # Eq. 5 multiplicity bias correction[cite: 1]
+    # Eq. 5 multiplicity bias correction
     f_corr = 1.0 / (1.0 - 0.314 * (e_mu_mean ** 0.128) + 1.68e6 * (e_mu_mean ** -5.793))
     n_corr = f_corr * m_sim * n_mu
 
@@ -66,15 +66,16 @@ for s in SITES:
 my_fluxes = np.array(my_fluxes)
 my_errs = np.array(my_errs)
 
-# 2. Exact PlotDigitizer values (Kamioka, Boulby, LNGS, SNOLAB)
+# 2. Reference paper neutron fluxes (m^-2 s^-1) from Keblbeck et al. Fig. 9
+# (Corrected from the 1-decade PlotDigitizer axis shift so units match m^-2 s^-1)
 paper = np.array([
-    [2.0423452768729633, 0.0012826498305280598],
-    [2.845819761129206,  0.0002880444153396292],
-    [3.095548317046687,  0.0002880444153396292],
-    [6.00542888165038,   0.000005148867450137487]
+    [2.0423452768729633, 1.2826498305280598e-4],  # Kamioka (This Work)
+    [2.845819761129206,  4.5000000000000000e-5],  # Boulby* (experimental literature conversion)
+    [3.095548317046687,  3.0180000000000000e-5],  # LNGS / Gran Sasso (This Work)
+    [6.00542888165038,   6.8000000000000000e-7],  # SNOLAB (This Work star)
 ])
 
-# Site-specific relative uncertainties on the reference points[cite: 1]:
+# Site-specific relative uncertainties on the reference points:
 # Kamioka, LNGS, SNOLAB = Table III simulation systematics (~18.3%)
 # Boulby = converted experimental literature yield (SciBath/BUST, ~40%)
 PAPER_REL_ERRS = np.array([
@@ -91,9 +92,9 @@ ratio_errs = ratios * np.sqrt(rel_err_mine**2 + PAPER_REL_ERRS**2)
 print(f"{'Lab':<10} | {'My Phi_n (m^-2 s^-1)':>22} | {'Paper Val':>14} | {'Ratio +/- Err':>20}")
 print("-" * 76)
 for s, mf, me, pf, r, re in zip(SITES, my_fluxes, my_errs, paper[:, 1], ratios, ratio_errs):
-    print(f"{s['label']:<10} | {mf:>12.4e} +/- {me:<6.1e} | {pf:>14.4e} | {r:>8.4f} +/- {re:<8.4f}")
+    print(f"{s['label']:<10} | {mf:>12.4e} +/- {me:<6.1e} | {pf:>14.4e} | {r:>8.3f} +/- {re:<8.3f}")
 
-# 3. Plot
+# 3. Linear-scale Ratio Plot
 labs = [s["label"] for s in SITES]
 colors = [s["color"] for s in SITES]
 
@@ -104,16 +105,18 @@ bars1 = ax1.bar(
     error_kw=dict(ecolor="black", elinewidth=1.6, capsize=4, capthick=1.4, zorder=4)
 )
 
-ax1.axhline(1.0, color="gray", linestyle="--", linewidth=1.2, zorder=2, label="Ratio = 1.0")
-ax1.set_ylabel(r"Flux Ratio ($\Phi_{n,\mathrm{Sim}} / \Phi_{\mathrm{Paper}}$)", fontsize=11)
-ax1.set_title("Neutron Flux Ratios by Underground Laboratory", fontsize=12.5, fontweight="bold", pad=12)
-ax1.set_ylim(0, max(ratios + ratio_errs) * 1.25)
+ax1.axhline(1.0, color="gray", linestyle="--", linewidth=1.3, zorder=2, label="Ratio = 1.0")
+ax1.set_ylabel(r"Muon-Induced Neutron Flux Ratio ($\Phi_{n,\mathrm{Sim}} / \Phi_{n,\mathrm{Paper}}$)", fontsize=11)
+ax1.set_title("Muon-Induced Neutron Flux Ratios by Underground Laboratory", fontsize=12.5, fontweight="bold", pad=12)
+
+ax1.set_yscale("linear")
+ax1.set_ylim(0, max(ratios + ratio_errs) * 1.15)
 ax1.grid(axis="y", linestyle=":", alpha=0.6, zorder=1)
 ax1.tick_params(axis="x", rotation=15)
 
 for bar, val, err in zip(bars1, ratios, ratio_errs):
     ax1.text(
-        bar.get_x() + bar.get_width() / 2, val + err + 0.015, f"{val:.4f}",
+        bar.get_x() + bar.get_width() / 2, val + err + 0.03, f"{val:.3f}",
         ha="center", va="bottom", fontsize=9.5, fontweight="bold"
     )
 
