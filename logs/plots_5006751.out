@@ -18,7 +18,7 @@
 *  - The models used for daemonflux, MCEq, PROPOSAL, and mountain maps  *
 *                                                                       *
 *************************************************************************
---- Generating Flat-Overburden Data for KamLAND (2.05 km.w.e.) ---
+--- Generating Flat-Overburden Intensities for KamLAND (2.05 km.w.e.) ---
 Calculating underground fluxes.
 Loading surface fluxes for USStd using gsf and sibyll23c.
 Loaded surface fluxes.
@@ -27,27 +27,8 @@ Loaded survival probabilities.
 Finished calculating underground fluxes.
 Calculating underground intensities.
 Finished calculating underground intensities.
-  Total Flux: 1.3042e-07 cm^-2 s^-1 (1.3042e-03 m^-2 s^-1)
-Calculating underground fluxes.
-Loading surface fluxes for USStd using gsf and sibyll23c.
-Loaded surface fluxes.
-Survival probabilities already loaded for rock with density 2.65 gcm^-3 and 1000000 muons.
-Finished calculating underground fluxes.
---- Generating Flat-Overburden Data for Boulby (2.84 km.w.e.) ---
-Calculating underground fluxes.
-Loading surface fluxes for USStd using gsf and sibyll23c.
-Loaded surface fluxes.
-Survival probabilities already loaded for rock with density 2.65 gcm^-3 and 1000000 muons.
-Finished calculating underground fluxes.
-Calculating underground intensities.
-Finished calculating underground intensities.
-  Total Flux: 3.1432e-08 cm^-2 s^-1 (3.1432e-04 m^-2 s^-1)
-Calculating underground fluxes.
-Loading surface fluxes for USStd using gsf and sibyll23c.
-Loaded surface fluxes.
-Survival probabilities already loaded for rock with density 2.65 gcm^-3 and 1000000 muons.
-Finished calculating underground fluxes.
---- Generating Flat-Overburden Data for LNGS (3.1 km.w.e.) ---
+Saved /home/taylor33/code/MUTEFiles/MUTE_KamLAND_flat_intensities.txt
+--- Generating Flat-Overburden Intensities for Boulby (2.84 km.w.e.) ---
 Calculating underground fluxes.
 Loading surface fluxes for USStd using gsf and sibyll23c.
 Loaded surface fluxes.
@@ -55,13 +36,8 @@ Survival probabilities already loaded for rock with density 2.65 gcm^-3 and 1000
 Finished calculating underground fluxes.
 Calculating underground intensities.
 Finished calculating underground intensities.
-  Total Flux: 2.0586e-08 cm^-2 s^-1 (2.0586e-04 m^-2 s^-1)
-Calculating underground fluxes.
-Loading surface fluxes for USStd using gsf and sibyll23c.
-Loaded surface fluxes.
-Survival probabilities already loaded for rock with density 2.65 gcm^-3 and 1000000 muons.
-Finished calculating underground fluxes.
---- Generating Flat-Overburden Data for SNOLAB (5.89 km.w.e.) ---
+Saved /home/taylor33/code/MUTEFiles/MUTE_Boulby_flat_intensities.txt
+--- Generating Flat-Overburden Intensities for LNGS (3.1 km.w.e.) ---
 Calculating underground fluxes.
 Loading surface fluxes for USStd using gsf and sibyll23c.
 Loaded surface fluxes.
@@ -69,11 +45,15 @@ Survival probabilities already loaded for rock with density 2.65 gcm^-3 and 1000
 Finished calculating underground fluxes.
 Calculating underground intensities.
 Finished calculating underground intensities.
-  Total Flux: 4.1579e-10 cm^-2 s^-1 (4.1579e-06 m^-2 s^-1)
+Saved /home/taylor33/code/MUTEFiles/MUTE_LNGS_flat_intensities.txt
+--- Generating Flat-Overburden Intensities for SNOLAB (5.89 km.w.e.) ---
 Calculating underground fluxes.
 Loading surface fluxes for USStd using gsf and sibyll23c.
 Loaded surface fluxes.
 Survival probabilities already loaded for rock with density 2.65 gcm^-3 and 1000000 muons.
 Finished calculating underground fluxes.
+Calculating underground intensities.
+Finished calculating underground intensities.
+Saved /home/taylor33/code/MUTEFiles/MUTE_SNOLAB_flat_intensities.txt
 
-Saved MUTE_flat_overburden_fluxes.txt and lab-specific energy CDFs.
+All 4 flat-overburden intensity files generated successfully.

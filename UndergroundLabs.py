@@ -7,76 +7,59 @@ from scipy.optimize import curve_fit
 
 BASE_DIR = "/home/taylor33/scratch"
 save_path = "/home/taylor33/code/plots/"
+MUTE_FLUX_FILE = "/home/taylor33/code/MUTEFiles/MUTE_flat_overburden_fluxes.txt"
+
+# Load columns from MUTE output: [0] vertical_depth_kmwe, [1] flux_cm2_s, [2] flux_m2_s
+# Row order: 0=KamLAND, 1=Boulby, 2=LNGS, 3=SNOLAB
+mute_data = np.loadtxt(MUTE_FLUX_FILE)
 
 SITES_CONFIG = {
-    #'CURIE': {
-     #   'path': os.path.join(BASE_DIR, 'escaped_secondary_hideout.csv'),
-      #  'depth': 0.40,               # km.w.e.
-       # 'area': 66.2,                # area of rock cavern not including floor in m^2
-       # 'R_gen': 8.4,                # Primary generation hemisphere radius in meters
-       # 'Phi_mu': 1.15e-1,           # Primary muon flux (m^-2 s^-1)
-       # 'color': '#ff7f0e',          # Orange
-       # 'marker': '*',
-       # 'ms': 10
-    #},
-
-    #'Soudan': {
-    #    'path': os.path.join(BASE_DIR, 'escaped_secondary_soudan.csv'),
-    #    'depth': 1.95,
-    #    'area': 66.2,                # soudan 2 cavern where CDMS 2 is 3620
-    #    'R_gen': 8.4,                
-    #    'Phi_mu': 2.00e-3,
-    #    'color': '#d62728',          # Red
-    #    'marker': '*',
-    #    'ms': 10
-    #},
-
     'Kamioka': {
-        'path': os.path.join(BASE_DIR, 'MUTE_KamLAND.csv'),
-        'depth': 2.05,
-        'area': 66.2,               # Where Hyper Kamiokande is (newly excavated) 2091
-        'R_gen': 8.4,                
-        'Phi_mu': 1.50e-3,
-        'color': '#bcbd22',          # Yellow-green
+        'path': os.path.join(BASE_DIR, '0_KamLAND.csv'),
+        'depth': mute_data[0, 0],
+        'area': 66.2,               # Rock-cavern boundary surface area (m^2)
+        'R_gen': 8.4,               # Primary generation hemisphere radius (m)
+        'Phi_mu': mute_data[0, 2],
+        'color': '#bcbd22',         # Yellow-green
         'marker': '*',
         'ms': 10
     },
 
     'Boulby': {
-        'path': os.path.join(BASE_DIR, 'MUTE_Boulby.csv'),
-        'depth': 2.805,
-        'area': 66.2,              
+        'path': os.path.join(BASE_DIR, '0_Boulby.csv'),
+        'depth': mute_data[1, 0],
+        'area': 66.2,
         'R_gen': 8.4,
-        'Phi_mu': 4.09,
-        'color': '#0000FF',          # Blue
+        'Phi_mu': mute_data[1, 2],
+        'color': '#0000FF',         # Blue
         'marker': '*',
         'ms': 10
     },
 
     'Gran Sasso': {
-        'path': os.path.join(BASE_DIR, 'MUTE_LNGS.csv'),
-        'depth': 3.10,
-        'area': 66.2,                # Hall C (Where NEWS is) 5376
-        'R_gen': 8.4,                
-        'Phi_mu': 2.50e-4,
-        'color': '#e377c2',          # Pink
+        'path': os.path.join(BASE_DIR, '0_LNGS.csv'),
+        'depth': mute_data[2, 0],
+        'area': 66.2,
+        'R_gen': 8.4,
+        'Phi_mu': mute_data[2, 2],
+        'color': '#e377c2',         # Pink
         'marker': '*',
         'ms': 10
     },
 
     'SNOLAB': {
-        'path': os.path.join(BASE_DIR, 'MUTE_snolab.csv'),
-        'depth': 6.00,
-        'area': 66.2,                 # cube hall 276
-        'R_gen': 8.4,             
-        'Phi_mu': 3.00e-6,
-        'color': '#2ca02c',          # Green
+        'path': os.path.join(BASE_DIR, '0_SNOLAB.csv'),
+        'depth': mute_data[3, 0],
+        'area': 66.2,
+        'R_gen': 8.4,
+        'Phi_mu': mute_data[3, 2],
+        'color': '#2ca02c',         # Green
         'marker': '*',
         'ms': 10
     }
 }
 
-SYS_ERR_FRACTION = 0.085  
+SYS_ERR_FRACTION = 0.085
 
 
 def get_site_metrics(file_path):
@@ -116,14 +99,12 @@ def get_site_metrics(file_path):
     return n_count, E_mu_mean, n_mu_simulated, M_sim
 
 
-def get_multiplicity_correction(E_mu, M_sim):
+def get_multiplicity_correction_factor(E_mu):
     """
-    Eq5: Geant4 empirical multiplicity bias correction
-    E_mu = muon energy
-    M_sim = simulated neutron multiplicity
-    Returns M_corr = corrected neutron multiplicity
+    Eq5: Geant4 empirical multiplicity bias correction factor f_corr(E_mu)
+    such that M_corr = f_corr * M_sim.
     """
-    return M_sim / (1.0 - 0.314 * (E_mu**0.128) + 1.68e6 * (E_mu**-5.793))
+    return 1.0 / (1.0 - 0.314 * (E_mu**0.128) + 1.68e6 * (E_mu**-5.793))
 
 
 def mei_hime_flux(X):
@@ -140,16 +121,16 @@ def mei_hime_flux(X):
 def param_model(X, A, X0, n):
     """
     Eq6: parameterization for fitting
-    A = 0.003+- 0.001m^-2s^-1
-    X0 = 1.015 +- 0.083km.w.e
-    n = 1.562+- 0.192
+    A = 0.003 +- 0.001 m^-2 s^-1
+    X0 = 1.015 +- 0.083 km.w.e
+    n = 1.562 +- 0.192
     X = Depth (km.w.e.)
     """
     return A * ((X0 / X) ** n) * np.exp(-X / X0)
 
 
 def sim_livetime(n_mu_simulated, phi_mu, r_gen):
-    """simulation livetime in seconds from primary generation surface."""
+    """Simulation livetime in seconds from primary generation hemisphere surface."""
     a_gen = 2.0 * np.pi * (r_gen ** 2)
     return n_mu_simulated / (phi_mu * a_gen)
 
@@ -164,9 +145,9 @@ def format_flux_with_err(val, err):
     return rf"({mant_val:.2f} \pm {mant_err:.2f}) \times 10^{{{exp}}}"
 
 
-print("=" * 72)
-print(f"{'Site':<15} | {'Filename':<30} | {'Simulated Primary Muons (N_mu)':>22}")
-print("-" * 72)
+print("=" * 105)
+print(f"{'Site':<15} | {'Depth (km.w.e.)':<15} | {'Phi_mu (m^-2 s^-1)':<18} | {'N_mu':>12} | {'Flux +/- Err (m^-2 s^-1)':>30}")
+print("-" * 105)
 
 sim_data = {}
 for site, cfg in SITES_CONFIG.items():
@@ -174,17 +155,19 @@ for site, cfg in SITES_CONFIG.items():
     if n_count is None:
         continue
 
-    fname = os.path.basename(cfg['path'])
-    print(f"{site:<15} | {fname:<30} | {N_mu_simulated:>22,}")
-
-    M_corr = get_multiplicity_correction(E_mu_calculated, M_sim)
+    f_corr = get_multiplicity_correction_factor(E_mu_calculated)
+    M_corr = f_corr * M_sim
     N_s = M_corr * N_mu_simulated  # Total corrected neutron count
 
     t_live = sim_livetime(N_mu_simulated, cfg['Phi_mu'], cfg['R_gen'])
     flux = N_s / (t_live * cfg['area'])  # Phi_RC = N_s / (T_live * A_cavern)
 
-    stat_err = np.sqrt(N_s) / (t_live * cfg['area']) if N_s > 0 else 0
-    total_err = np.sqrt(stat_err**2 + (flux * SYS_ERR_FRACTION)**2)
+    # Propagate Poisson counting uncertainty through multiplicity correction + 8.5% systematic
+    stat_err = (f_corr * np.sqrt(n_count)) / (t_live * cfg['area']) if n_count > 0 else 0.0
+    sys_err = flux * SYS_ERR_FRACTION
+    total_err = np.sqrt(stat_err**2 + sys_err**2)
+
+    print(f"{site:<15} | {cfg['depth']:<15.2f} | {cfg['Phi_mu']:<18.4e} | {N_mu_simulated:>12,} | {flux:>12.4e} +/- {total_err:<12.4e}")
 
     sim_data[site] = {
         'depth': cfg['depth'],
@@ -195,10 +178,10 @@ for site, cfg in SITES_CONFIG.items():
         'ms': cfg['ms']
     }
 
-print("=" * 72)
+print("=" * 105)
 
 
-def plot_simulation_flux(include_eqn6_fit=True, output_filename="Simulation_Neutron_Flux.png", target_dir=save_path):
+def plot_simulation_flux(include_eqn6_fit=True, output_filename="MUTE_Sims_RockCavern_0.png", target_dir=save_path):
     plt.figure(figsize=(9, 6.5), dpi=150)
     X_mesh = np.linspace(0.05, 6.4, 300)
 
@@ -215,7 +198,7 @@ def plot_simulation_flux(include_eqn6_fit=True, output_filename="Simulation_Neut
 
         def log_param_model(X, A, X0, n):
             return np.log10(param_model(X, A, X0, n))
-        
+
         y_fit_log = np.log10(y_fit)
         y_err_log = y_err / (y_fit * np.log(10))
 
@@ -227,7 +210,6 @@ def plot_simulation_flux(include_eqn6_fit=True, output_filename="Simulation_Neut
             bounds=([1e-5, 0.1, 0.1], [0.1, 10.0, 5.0]),
             maxfev=50000
         )
-
         flux_fit = param_model(X_mesh, *popt)
         plt.plot(X_mesh, flux_fit, 'r--', linewidth=1.2, label=r'Sim Fit: $\Phi_n = A \cdot (\frac{X_0}{X})^n \cdot e^{-X/X_0}$')
         plt.fill_between(X_mesh, flux_fit * 0.6, flux_fit * 1.6, color='red', alpha=0.12, label=r'Sim Fit $\pm 1\sigma$')
@@ -242,6 +224,7 @@ def plot_simulation_flux(include_eqn6_fit=True, output_filename="Simulation_Neut
         )
 
     plt.yscale('log')
+    plt.title(r'Muon-Induced Neutron Flux at Rock–Cavern Boundary for each lab', fontsize=13, pad=10)
     plt.xlabel('Depth (km.w.e.)', fontsize=14)
     plt.ylabel(r'Rock-Cavern Flux ($\text{m}^{-2}\text{s}^{-1}$)', fontsize=14)
     plt.xlim(0, 6.5)
@@ -250,7 +233,7 @@ def plot_simulation_flux(include_eqn6_fit=True, output_filename="Simulation_Neut
     plt.xticks(np.arange(0, 6.6, 0.5), fontsize=12)
     plt.gca().yaxis.set_major_locator(ticker.LogLocator(base=10.0, numticks=15))
     plt.yticks(fontsize=12)
-    
+
     plt.grid(True, which='both', color='gainsboro', linestyle='-', linewidth=0.5, alpha=0.7)
     plt.legend(fontsize=8.5, loc='upper right', frameon=True, ncol=1)
     plt.tight_layout()
@@ -261,4 +244,4 @@ def plot_simulation_flux(include_eqn6_fit=True, output_filename="Simulation_Neut
     print(f"Plot saved to {full_output_path}")
 
 
-plot_simulation_flux(include_eqn6_fit=True, output_filename="MUTE_Sims_No_NEWSG.png")
+plot_simulation_flux(include_eqn6_fit=True, output_filename="MUTE_Sims_RockCavern_0.png")
