@@ -65,7 +65,7 @@ SYS_COMPONENTS = {
     'sigma_rho_E': 0.050,      # Rock density + muon energy spectrum (+/- 5.0%)
     'sigma_SH': 0.100,         # Sternheimer / standard-rock MUTE intensity (+/- 10.0%)
     'sigma_Tlive': 0.100,      # Livetime normalization (+/- 10.0%)
-    'sigma_A': 0.100,          # Cavern wall surface area (+/- 10%%)
+    'sigma_A': 0.250,          # Cavern wall surface area (+/- 25%)
     'sigma_geant4': 0.005,     # Geant4 physics model (+/- 0.5%)
 }
 SYS_ERR_FRACTION = np.sqrt(sum(v**2 for v in SYS_COMPONENTS.values()))  # sum of squared error
@@ -237,7 +237,7 @@ def plot_simulation_flux(include_eqn6_fit=True, output_filename="MUTE_Sims_RockC
         )
 
     plt.yscale('log')
-    plt.title(r'Muon-Induced Neutron Flux at Rock–Cavern Boundary for Each Lab ($A = 66.2\ \mathrm{m^2}$)', fontsize=13, pad=10)
+    plt.title(r'Muon-Induced Neutron Flux at Rock–Cavern Boundary for Each Lab', fontsize=13, pad=10)
     plt.xlabel('Depth (km.w.e.)', fontsize=14)
     plt.ylabel(r'Rock-Cavern Flux ($\text{m}^{-2}\text{s}^{-1}$)', fontsize=14)
     plt.xlim(0, 6.5)
