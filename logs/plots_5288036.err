@@ -1,4 +1,0 @@
-  File "/home/taylor33/code/UndergroundLabs.py", line 235
-    markeredgecolor='black', markeredgewidth=0.7, capsize=3,
-                                                  ^^^^^^^^^
-SyntaxError: keyword argument repeated: capsize

@@ -232,7 +232,7 @@ def plot_simulation_flux(include_eqn6_fit=True, output_filename="MUTE_Sims_RockC
             item['depth'], item['flux'], yerr=item['err'], fmt=item['marker'],
             color=item['color'], ecolor=item['color'], ms=item['ms'],
             elinewidth=1.8, capthick=1.5, capsize=4, zorder=5,
-            markeredgecolor='black', markeredgewidth=0.7, capsize=3,
+            markeredgecolor='black', markeredgewidth=0.7,
             label=rf"{label} (Sim): ${flux_label}\ \mathrm{{m^{{-2}}\,s^{{-1}}}}$"
         )
 
@@ -243,8 +243,23 @@ def plot_simulation_flux(include_eqn6_fit=True, output_filename="MUTE_Sims_RockC
     plt.xlim(0, 6.5)
     plt.ylim(1e-7, 1e1)
 
-    plt.xticks(np.arange(0, 7, 1), fontsize=12)
-    plt.gca().yaxis.set_major_locator(ticker.LogLocator(base=10.0, numticks=15))
+    ax = plt.gca()
+
+    # X-axis: integer major ticks (0, 1, 2, 3, 4, 5, 6) + optional 0.5 minor tick marks without grid lines
+    ax.set_xticks(np.arange(0, 7, 1))
+    ax.xaxis.set_minor_locator(ticker.MultipleLocator(0.5))
+    ax.tick_params(axis='x', which='major', labelsize=12, length=5)
+    ax.tick_params(axis='x', which='minor', length=3)
+
+    # Y-axis: major decade ticks (10^-7 .. 10^1) + minor sub-decade ticks on spine only
+    ax.yaxis.set_major_locator(ticker.LogLocator(base=10.0, subs=(1.0,), numticks=15))
+    ax.yaxis.set_minor_locator(ticker.LogLocator(base=10.0, subs=np.arange(2, 10) * 0.1, numticks=100))
+    ax.yaxis.set_minor_formatter(ticker.NullFormatter())
+    ax.tick_params(axis='y', which='major', labelsize=12, length=5)
+    ax.tick_params(axis='y', which='minor', length=2.5)
+
+    # Grid lines ONLY on major ticks (clean single lines per integer and per decade)
+    ax.grid(True, which='major', color='gainsboro', linestyle='-', linewidth=0.5, alpha=0.7)
     plt.yticks(fontsize=12)
 
     plt.grid(True, which='both', color='gainsboro', linestyle='-', linewidth=0.5, alpha=0.7)
