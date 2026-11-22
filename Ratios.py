@@ -55,7 +55,7 @@ def compute_neutron_flux(csv_path, phi_mu):
     return flux, total_err
 
 
-# 1. Extract muon-induced neutron fluxes directly from 0_*.csv
+# 1. Extract your new neutron fluxes and errors directly from 0_*.csv
 my_fluxes, my_errs = [], []
 for s in SITES:
     flux, err = compute_neutron_flux(os.path.join(BASE_DIR, s["csv"]), s["phi_mu"])
@@ -65,18 +65,20 @@ for s in SITES:
 my_fluxes = np.array(my_fluxes)
 my_errs = np.array(my_errs)
 
-# 2. Keblbeck et al. Fig. 9 muon-induced neutron fluxes (m^-2 s^-1)
-# (Digitized values from your previous plot corrected to m^-2 s^-1 neutron scale;
-#  Boulby corresponds to the BUST/experimental point at ~2.84 km.w.e.)
+# 2. Your digitized points from Keblbeck et al. Fig. 9 (divided by 10 to fix the 1-decade y-axis calibration)
 paper_neutron = np.array([
-    [2.0432, 1.3308e-4],   # Kamioka (Sim in Keblbeck et al.)
-    [2.8453, 4.5000e-5],   # Boulby (BUST/exp reference in Keblbeck et al.)
-    [3.0935, 3.0180e-5],   # LNGS (Sim in Keblbeck et al.)
-    [6.0144, 6.5000e-7],   # SNOLAB (Sim in Keblbeck et al.)
+    [2.0423452768729633, 0.0012826498305280598 / 10.0],  # Kamioka (This Work) -> 1.283e-4
+    [2.845819761129206,  0.0002880444153396292 / 10.0],  # Boulby* (Exp. converted) -> 2.880e-5
+    [3.095548317046687,  0.0002880444153396292 / 10.0],  # Gran Sasso (This Work) -> 2.880e-5
+    [6.00542888165038,   0.000005148867450137487 / 10.0] # SNOLAB (This Work) -> 5.149e-7
 ])
 
 ratios = my_fluxes / paper_neutron[:, 1]
-ratio_errs = my_errs / paper_neutron[:, 1]
+
+# Propagate both your uncertainty and the paper's Table III systematic uncertainty (~18.3%)
+rel_err_mine = my_errs / my_fluxes
+rel_err_paper = SYS_ERR_FRACTION
+ratio_errs = ratios * np.sqrt(rel_err_mine**2 + rel_err_paper**2)
 
 print(f"{'Lab':<10} | {'My Phi_n (m^-2 s^-1)':>22} | {'Paper Phi_n':>14} | {'Ratio +/- Err':>20}")
 print("-" * 76)
@@ -97,13 +99,13 @@ bars1 = ax1.bar(
 ax1.axhline(1.0, color="gray", linestyle="--", linewidth=1.2, zorder=2, label="Ratio = 1.0")
 ax1.set_ylabel(r"Muon-Induced Neutron Flux Ratio ($\Phi_{n,\mathrm{Sim}} / \Phi_{n,\mathrm{Paper}}$)", fontsize=11)
 ax1.set_title("Muon-Induced Neutron Flux Ratios by Underground Laboratory", fontsize=12.5, fontweight="bold", pad=12)
-ax1.set_ylim(0, 1.8)
+ax1.set_ylim(0, 2.7)
 ax1.grid(axis="y", linestyle=":", alpha=0.6, zorder=1)
 ax1.tick_params(axis="x", rotation=15)
 
 for bar, val, err in zip(bars1, ratios, ratio_errs):
     ax1.text(
-        bar.get_x() + bar.get_width() / 2, val + err + 0.04, f"{val:.3f}",
+        bar.get_x() + bar.get_width() / 2, val + err + 0.05, f"{val:.3f}",
         ha="center", va="bottom", fontsize=9.5, fontweight="bold"
     )
 
