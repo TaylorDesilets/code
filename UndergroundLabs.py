@@ -59,7 +59,16 @@ SITES_CONFIG = {
     }
 }
 
-SYS_ERR_FRACTION = 0.085
+# Full systematic error budget from Keblbeck et al. Table III (combined in quadrature)
+SYS_COMPONENTS = {
+    'sigma_corr': 0.085,       # Multiplicity bias correction (+/- 8.5%)
+    'sigma_rho_E': 0.050,      # Rock density + muon energy spectrum (+/- 5.0%)
+    'sigma_SH': 0.100,         # Sternheimer / standard-rock MUTE intensity (+/- 10.0%)
+    'sigma_Tlive': 0.100,      # Livetime normalization (+/- 10.0%)
+    'sigma_A': 0.060,          # Cavern wall surface area (+/- 6.0%)
+    'sigma_geant4': 0.005,     # Geant4 physics model (+/- 0.5%)
+}
+SYS_ERR_FRACTION = np.sqrt(sum(v**2 for v in SYS_COMPONENTS.values()))  # ~18.3%
 
 
 def get_site_metrics(file_path):
@@ -145,9 +154,11 @@ def format_flux_with_err(val, err):
     return rf"({mant_val:.2f} \pm {mant_err:.2f}) \times 10^{{{exp}}}"
 
 
-print("=" * 105)
-print(f"{'Site':<15} | {'Depth (km.w.e.)':<15} | {'Phi_mu (m^-2 s^-1)':<18} | {'N_mu':>12} | {'Flux +/- Err (m^-2 s^-1)':>30}")
-print("-" * 105)
+print("=" * 112)
+print(f"Total Fractional Systematic Uncertainty (Table III Quadrature): {SYS_ERR_FRACTION:.2%}")
+print("-" * 112)
+print(f"{'Site':<15} | {'Depth (km.w.e.)':<15} | {'N_neutrons':>10} | {'Stat Err':>10} | {'Flux +/- Total Err (m^-2 s^-1)':>32}")
+print("-" * 112)
 
 sim_data = {}
 for site, cfg in SITES_CONFIG.items():
@@ -162,12 +173,13 @@ for site, cfg in SITES_CONFIG.items():
     t_live = sim_livetime(N_mu_simulated, cfg['Phi_mu'], cfg['R_gen'])
     flux = N_s / (t_live * cfg['area'])  # Phi_RC = N_s / (T_live * A_cavern)
 
-    # Propagate Poisson counting uncertainty through multiplicity correction + 8.5% systematic
+    # Propagate Poisson counting uncertainty through multiplicity correction + full systematic budget
     stat_err = (f_corr * np.sqrt(n_count)) / (t_live * cfg['area']) if n_count > 0 else 0.0
     sys_err = flux * SYS_ERR_FRACTION
     total_err = np.sqrt(stat_err**2 + sys_err**2)
+    rel_stat = (stat_err / flux * 100.0) if flux > 0 else 0.0
 
-    print(f"{site:<15} | {cfg['depth']:<15.2f} | {cfg['Phi_mu']:<18.4e} | {N_mu_simulated:>12,} | {flux:>12.4e} +/- {total_err:<12.4e}")
+    print(f"{site:<15} | {cfg['depth']:<15.2f} | {n_count:>10,} | {rel_stat:>9.2f}% | {flux:>12.4e} +/- {total_err:<12.4e}")
 
     sim_data[site] = {
         'depth': cfg['depth'],
@@ -178,7 +190,7 @@ for site, cfg in SITES_CONFIG.items():
         'ms': cfg['ms']
     }
 
-print("=" * 105)
+print("=" * 112)
 
 
 def plot_simulation_flux(include_eqn6_fit=True, output_filename="MUTE_Sims_RockCavern_0.png", target_dir=save_path):
@@ -224,13 +236,13 @@ def plot_simulation_flux(include_eqn6_fit=True, output_filename="MUTE_Sims_RockC
         )
 
     plt.yscale('log')
-    plt.title(r'Muon-Induced Neutron Flux at Rock–Cavern Boundary for each lab', fontsize=13, pad=10)
+    plt.title(r'Muon-Induced Neutron Flux at Rock–Cavern Boundary for Each Lab ($A = 66.2\ \mathrm{m^2}$)', fontsize=13, pad=10)
     plt.xlabel('Depth (km.w.e.)', fontsize=14)
     plt.ylabel(r'Rock-Cavern Flux ($\text{m}^{-2}\text{s}^{-1}$)', fontsize=14)
     plt.xlim(0, 6.5)
     plt.ylim(1e-8, 1e1)
 
-    plt.xticks(np.arange(0, 6.6, 0.5), fontsize=12)
+    plt.xticks(np.arange(0, 7, 1), fontsize=12)
     plt.gca().yaxis.set_major_locator(ticker.LogLocator(base=10.0, numticks=15))
     plt.yticks(fontsize=12)
 
