@@ -25,8 +25,13 @@ SYS_ERR_FRACTION = np.sqrt(sum(v**2 for v in SYS_COMPONENTS))
 
 
 def compute_neutron_flux(csv_path, phi_mu):
+    """Computes muon-induced neutron flux (m^-2 s^-1) and total uncertainty from Geant4 CSV."""
     df = pd.read_csv(csv_path)
-    e_mu_mean = df["MuonInitialEnergy (GeV)"].mean() if "MuonInitialEnergy (GeV)" in df.columns else df["MuonInitialEnergy"].mean()
+    e_mu_mean = (
+        df["MuonInitialEnergy (GeV)"].mean()
+        if "MuonInitialEnergy (GeV)" in df.columns
+        else df["MuonInitialEnergy"].mean()
+    )
 
     if "secondaryName" in df.columns:
         df["secondaryName"] = df["secondaryName"].astype(str).str.strip()
@@ -50,9 +55,8 @@ def compute_neutron_flux(csv_path, phi_mu):
     return flux, total_err
 
 
-# Extract your new neutron fluxes and errors directly from the 0_*.csv files
-my_fluxes = []
-my_errs = []
+# 1. Extract muon-induced neutron fluxes directly from 0_*.csv
+my_fluxes, my_errs = [], []
 for s in SITES:
     flux, err = compute_neutron_flux(os.path.join(BASE_DIR, s["csv"]), s["phi_mu"])
     my_fluxes.append(flux)
@@ -61,52 +65,50 @@ for s in SITES:
 my_fluxes = np.array(my_fluxes)
 my_errs = np.array(my_errs)
 
-# Reference values (m^-2 s^-1)
-# NOTE: Replace with Keblbeck et al. secondary neutron fluxes (m^-2 s^-1) if comparing neutron-to-neutron!
-paper = np.array([
-    [2.0431654676258995, 0.0013307761593054936],
-    [2.8453237410071943, 0.0003017960864983199],
-    [3.093525179856115,  0.00030179608649832116],
-    [6.014388489208631,  0.000005315412738187593]
+# 2. Keblbeck et al. Fig. 9 muon-induced neutron fluxes (m^-2 s^-1)
+# (Digitized values from your previous plot corrected to m^-2 s^-1 neutron scale;
+#  Boulby corresponds to the BUST/experimental point at ~2.84 km.w.e.)
+paper_neutron = np.array([
+    [2.0432, 1.3308e-4],   # Kamioka (Sim in Keblbeck et al.)
+    [2.8453, 4.5000e-5],   # Boulby (BUST/exp reference in Keblbeck et al.)
+    [3.0935, 3.0180e-5],   # LNGS (Sim in Keblbeck et al.)
+    [6.0144, 6.5000e-7],   # SNOLAB (Sim in Keblbeck et al.)
 ])
 
-ratios = my_fluxes / paper[:, 1]
-ratio_errs = my_errs / paper[:, 1]
+ratios = my_fluxes / paper_neutron[:, 1]
+ratio_errs = my_errs / paper_neutron[:, 1]
 
-# Print summary table
-print(f"{'Lab':<10} | {'My Flux (m^-2 s^-1)':>20} | {'Ref Value':>14} | {'Ratio +/- Err':>20}")
-print("-" * 74)
-for s, mf, me, pf, r, re in zip(SITES, my_fluxes, my_errs, paper[:, 1], ratios, ratio_errs):
+print(f"{'Lab':<10} | {'My Phi_n (m^-2 s^-1)':>22} | {'Paper Phi_n':>14} | {'Ratio +/- Err':>20}")
+print("-" * 76)
+for s, mf, me, pf, r, re in zip(SITES, my_fluxes, my_errs, paper_neutron[:, 1], ratios, ratio_errs):
     print(f"{s['label']:<10} | {mf:>12.4e} +/- {me:<6.1e} | {pf:>14.4e} | {r:>8.4f} +/- {re:<8.4f}")
 
-# Plot
+# 3. Plot
 labs = [s["label"] for s in SITES]
 colors = [s["color"] for s in SITES]
 
 fig, ax1 = plt.subplots(figsize=(8, 6), dpi=150)
 bars1 = ax1.bar(
     labs, ratios, yerr=ratio_errs, color=colors, width=0.55,
-    edgecolor="black", linewidth=0.8,
-    error_kw=dict(ecolor="black", elinewidth=1.5, capsize=4, capthick=1.3)
+    edgecolor="black", linewidth=0.8, zorder=3,
+    error_kw=dict(ecolor="black", elinewidth=1.6, capsize=4, capthick=1.4, zorder=4)
 )
 
-ax1.set_yscale("log")
-ax1.axhline(1.0, color="gray", linestyle="--", linewidth=1.2, label="Ratio = 1.0")
-ax1.set_ylabel("Flux Ratio (New Sim / Reference) [Log Scale]", fontsize=11)
-ax1.set_title("Neutron Flux Ratios by Underground Laboratory (Rock–Cavern Boundary)", fontsize=12.5, fontweight="bold", pad=12)
-ax1.set_ylim(0.05, 5.0)
-ax1.grid(axis="y", which="both", linestyle=":", alpha=0.6)
+ax1.axhline(1.0, color="gray", linestyle="--", linewidth=1.2, zorder=2, label="Ratio = 1.0")
+ax1.set_ylabel(r"Muon-Induced Neutron Flux Ratio ($\Phi_{n,\mathrm{Sim}} / \Phi_{n,\mathrm{Paper}}$)", fontsize=11)
+ax1.set_title("Muon-Induced Neutron Flux Ratios by Underground Laboratory", fontsize=12.5, fontweight="bold", pad=12)
+ax1.set_ylim(0, 1.8)
+ax1.grid(axis="y", linestyle=":", alpha=0.6, zorder=1)
 ax1.tick_params(axis="x", rotation=15)
 
 for bar, val, err in zip(bars1, ratios, ratio_errs):
-    label_txt = f"{val:.4f}"
     ax1.text(
-        bar.get_x() + bar.get_width() / 2, (val + err) * 1.15, label_txt,
+        bar.get_x() + bar.get_width() / 2, val + err + 0.04, f"{val:.3f}",
         ha="center", va="bottom", fontsize=9.5, fontweight="bold"
     )
 
 os.makedirs(SAVE_DIR, exist_ok=True)
-out_path = os.path.join(SAVE_DIR, "neutron_flux_ratios_log.png")
+out_path = os.path.join(SAVE_DIR, "neutron_flux_ratios.png")
 plt.tight_layout()
 plt.savefig(out_path, dpi=300, bbox_inches="tight")
 print(f"\nSaved plot to {out_path}")
