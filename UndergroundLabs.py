@@ -65,10 +65,10 @@ SYS_COMPONENTS = {
     'sigma_rho_E': 0.050,      # Rock density + muon energy spectrum (+/- 5.0%)
     'sigma_SH': 0.100,         # Sternheimer / standard-rock MUTE intensity (+/- 10.0%)
     'sigma_Tlive': 0.100,      # Livetime normalization (+/- 10.0%)
-    'sigma_A': 0.060,          # Cavern wall surface area (+/- 6.0%)
+    'sigma_A': 0.100,          # Cavern wall surface area (+/- 10%%)
     'sigma_geant4': 0.005,     # Geant4 physics model (+/- 0.5%)
 }
-SYS_ERR_FRACTION = np.sqrt(sum(v**2 for v in SYS_COMPONENTS.values()))  # ~18.3%
+SYS_ERR_FRACTION = np.sqrt(sum(v**2 for v in SYS_COMPONENTS.values()))  # sum of squared error
 
 
 def get_site_metrics(file_path):
@@ -231,6 +231,7 @@ def plot_simulation_flux(include_eqn6_fit=True, output_filename="MUTE_Sims_RockC
         plt.errorbar(
             item['depth'], item['flux'], yerr=item['err'], fmt=item['marker'],
             color=item['color'], ecolor=item['color'], ms=item['ms'],
+            elinewidth=1.8, capthick=1.5, capsize=4, zorder=5,
             markeredgecolor='black', markeredgewidth=0.7, capsize=3,
             label=rf"{label} (Sim): ${flux_label}\ \mathrm{{m^{{-2}}\,s^{{-1}}}}$"
         )
@@ -240,7 +241,7 @@ def plot_simulation_flux(include_eqn6_fit=True, output_filename="MUTE_Sims_RockC
     plt.xlabel('Depth (km.w.e.)', fontsize=14)
     plt.ylabel(r'Rock-Cavern Flux ($\text{m}^{-2}\text{s}^{-1}$)', fontsize=14)
     plt.xlim(0, 6.5)
-    plt.ylim(1e-8, 1e1)
+    plt.ylim(1e-7, 1e1)
 
     plt.xticks(np.arange(0, 7, 1), fontsize=12)
     plt.gca().yaxis.set_major_locator(ticker.LogLocator(base=10.0, numticks=15))
