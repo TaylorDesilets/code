@@ -7,6 +7,7 @@ BASE_DIR = "/home/taylor33/scratch"
 SAVE_DIR = "/home/taylor33/code/plots"
 MUTE_FLUX_FILE = "/home/taylor33/code/MUTEFiles/MUTE_flat_overburden_fluxes.txt"
 
+# Load MUTE flat-overburden primary muon fluxes: [0] depth_kmwe, [1] flux_cm2_s, [2] flux_m2_s
 mute_data = np.loadtxt(MUTE_FLUX_FILE)
 
 SITES = [
@@ -16,16 +17,16 @@ SITES = [
     {"label": "SNOLAB",  "csv": "0_SNOLAB.csv",  "depth": mute_data[3, 0], "phi_mu": mute_data[3, 2], "color": "#3BC472"},
 ]
 
-AREA_CAVERN = 66.2  # m^2
-R_GEN = 8.4         # m
+AREA_CAVERN = 66.2  # Rock-cavern boundary surface area (m^2)
+R_GEN = 8.4         # Primary generation hemisphere radius (m)
 
-# Full Table III systematic uncertainty quadrature (~18.3%)
+# Full Table III systematic uncertainty quadrature (~18.3%)[cite: 1]
 SYS_COMPONENTS = [0.085, 0.050, 0.100, 0.100, 0.060, 0.005]
 SYS_ERR_FRACTION = np.sqrt(sum(v**2 for v in SYS_COMPONENTS))
 
 
 def compute_neutron_flux(csv_path, phi_mu):
-    """Computes muon-induced neutron flux (m^-2 s^-1) and total uncertainty from Geant4 CSV."""
+    """Computes muon-induced neutron flux (m^-2 s^-1) and total uncertainty from Geant4 CSV[cite: 1]."""
     df = pd.read_csv(csv_path)
     e_mu_mean = (
         df["MuonInitialEnergy (GeV)"].mean()
@@ -42,7 +43,7 @@ def compute_neutron_flux(csv_path, phi_mu):
     n_mu = df["EventID"].max() + 1 if ("EventID" in df.columns and len(df) > 0) else len(df)
     m_sim = n_count / n_mu if n_mu > 0 else 0.0
 
-    # Eq. 5 multiplicity bias correction
+    # Eq. 5 multiplicity bias correction[cite: 1]
     f_corr = 1.0 / (1.0 - 0.314 * (e_mu_mean ** 0.128) + 1.68e6 * (e_mu_mean ** -5.793))
     n_corr = f_corr * m_sim * n_mu
 
@@ -55,7 +56,7 @@ def compute_neutron_flux(csv_path, phi_mu):
     return flux, total_err
 
 
-# 1. Extract your new neutron fluxes and errors directly from 0_*.csv
+# 1. Extract simulated muon-induced neutron fluxes and uncertainties from 0_*.csv
 my_fluxes, my_errs = [], []
 for s in SITES:
     flux, err = compute_neutron_flux(os.path.join(BASE_DIR, s["csv"]), s["phi_mu"])
@@ -65,24 +66,31 @@ for s in SITES:
 my_fluxes = np.array(my_fluxes)
 my_errs = np.array(my_errs)
 
-# 2. Your digitized points from Keblbeck et al. Fig. 9 (divided by 10 to fix the 1-decade y-axis calibration)
-paper_neutron = np.array([
-    [2.0423452768729633, 0.0012826498305280598 / 10.0],  # Kamioka (This Work) -> 1.283e-4
-    [2.845819761129206,  0.0002880444153396292 / 10.0],  # Boulby* (Exp. converted) -> 2.880e-5
-    [3.095548317046687,  0.0002880444153396292 / 10.0],  # Gran Sasso (This Work) -> 2.880e-5
-    [6.00542888165038,   0.000005148867450137487 / 10.0] # SNOLAB (This Work) -> 5.149e-7
+# 2. Exact PlotDigitizer values (Kamioka, Boulby, LNGS, SNOLAB)
+paper = np.array([
+    [2.0423452768729633, 0.0012826498305280598],
+    [2.845819761129206,  0.0002880444153396292],
+    [3.095548317046687,  0.0002880444153396292],
+    [6.00542888165038,   0.000005148867450137487]
 ])
 
-ratios = my_fluxes / paper_neutron[:, 1]
+# Site-specific relative uncertainties on the reference points[cite: 1]:
+# Kamioka, LNGS, SNOLAB = Table III simulation systematics (~18.3%)
+# Boulby = converted experimental literature yield (SciBath/BUST, ~40%)
+PAPER_REL_ERRS = np.array([
+    SYS_ERR_FRACTION,  # Kamioka
+    0.40,              # Boulby* (experimental conversion)
+    SYS_ERR_FRACTION,  # LNGS
+    SYS_ERR_FRACTION,  # SNOLAB
+])
 
-# Propagate both your uncertainty and the paper's Table III systematic uncertainty (~18.3%)
+ratios = my_fluxes / paper[:, 1]
 rel_err_mine = my_errs / my_fluxes
-rel_err_paper = SYS_ERR_FRACTION
-ratio_errs = ratios * np.sqrt(rel_err_mine**2 + rel_err_paper**2)
+ratio_errs = ratios * np.sqrt(rel_err_mine**2 + PAPER_REL_ERRS**2)
 
-print(f"{'Lab':<10} | {'My Phi_n (m^-2 s^-1)':>22} | {'Paper Phi_n':>14} | {'Ratio +/- Err':>20}")
+print(f"{'Lab':<10} | {'My Phi_n (m^-2 s^-1)':>22} | {'Paper Val':>14} | {'Ratio +/- Err':>20}")
 print("-" * 76)
-for s, mf, me, pf, r, re in zip(SITES, my_fluxes, my_errs, paper_neutron[:, 1], ratios, ratio_errs):
+for s, mf, me, pf, r, re in zip(SITES, my_fluxes, my_errs, paper[:, 1], ratios, ratio_errs):
     print(f"{s['label']:<10} | {mf:>12.4e} +/- {me:<6.1e} | {pf:>14.4e} | {r:>8.4f} +/- {re:<8.4f}")
 
 # 3. Plot
@@ -97,15 +105,15 @@ bars1 = ax1.bar(
 )
 
 ax1.axhline(1.0, color="gray", linestyle="--", linewidth=1.2, zorder=2, label="Ratio = 1.0")
-ax1.set_ylabel(r"Muon-Induced Neutron Flux Ratio ($\Phi_{n,\mathrm{Sim}} / \Phi_{n,\mathrm{Paper}}$)", fontsize=11)
-ax1.set_title("Muon-Induced Neutron Flux Ratios by Underground Laboratory", fontsize=12.5, fontweight="bold", pad=12)
-ax1.set_ylim(0, 2.7)
+ax1.set_ylabel(r"Flux Ratio ($\Phi_{n,\mathrm{Sim}} / \Phi_{\mathrm{Paper}}$)", fontsize=11)
+ax1.set_title("Neutron Flux Ratios by Underground Laboratory", fontsize=12.5, fontweight="bold", pad=12)
+ax1.set_ylim(0, max(ratios + ratio_errs) * 1.25)
 ax1.grid(axis="y", linestyle=":", alpha=0.6, zorder=1)
 ax1.tick_params(axis="x", rotation=15)
 
 for bar, val, err in zip(bars1, ratios, ratio_errs):
     ax1.text(
-        bar.get_x() + bar.get_width() / 2, val + err + 0.05, f"{val:.3f}",
+        bar.get_x() + bar.get_width() / 2, val + err + 0.015, f"{val:.4f}",
         ha="center", va="bottom", fontsize=9.5, fontweight="bold"
     )
 
