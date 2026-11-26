@@ -67,12 +67,11 @@ my_fluxes = np.array(my_fluxes)
 my_errs = np.array(my_errs)
 
 # 2. Reference paper neutron fluxes (m^-2 s^-1) from Keblbeck et al. Fig. 9
-# (Corrected from the 1-decade PlotDigitizer axis shift so units match m^-2 s^-1)
 paper = np.array([
-    [2.0423452768729633, 1.2826498305280598e-4],  # Kamioka (This Work)
+    [2.0423452768729633, 1.2826498305280598e-4],  # Kamioka
     [2.845819761129206,  4.5000000000000000e-5],  # Boulby* (experimental literature conversion)
-    [3.095548317046687,  3.0180000000000000e-5],  # LNGS / Gran Sasso (This Work)
-    [6.00542888165038,   6.8000000000000000e-7],  # SNOLAB (This Work star)
+    [3.095548317046687,  3.0180000000000000e-5],  # LNGS
+    [6.00542888165038,   6.8000000000000000e-7],  # SNOLAB
 ])
 
 # Site-specific relative uncertainties on the reference points:
