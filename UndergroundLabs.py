@@ -269,7 +269,7 @@ def plot_all_setups_grid(all_sim_data, include_eqn6_fit=True, output_filename="M
 
     os.makedirs(target_dir, exist_ok=True)
     full_output_path = os.path.join(target_dir, output_filename)
-    plt.savefig(full_output_path, dpi=300)
+    plt.savefig(full_output_path, dpi=500)
     print(f"Combined plot saved to {full_output_path}")
 
 
